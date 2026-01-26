@@ -1,6 +1,6 @@
 # PrintsLB - Professional 3D Printing Services
 
-A modern, full-stack 3D printing service website built with Next.js 14, TypeScript, and TailwindCSS. Created by Ali Hamieh for professional 3D printing services with order management, tracking, and admin panel   made by ali hussien tayseer hamieh .
+A modern, full-stack 3D printing service website built with Next.js 14, TypeScript, and TailwindCSS. Created by Ali Hamieh for professional 3D printing services with order management, tracking, and admin panel .
 
 ## 🚀 Features
 
@@ -197,9 +197,9 @@ This project is proprietary software owned by Ali Hamieh.
 ## 📞 Support
 
 For support or inquiries:
-- **Email**: info@printslb.com
-- **Phone**: +961 123 456 789
-- **Location**: Beirut, Lebanon
+- **Email**: nah no support :(
+- **Phone**: same
+- **Location**: you wish i give you my info lol, you can find it at instagram 
 
 ## 🔄 Future Enhancements
 
