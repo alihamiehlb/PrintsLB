@@ -93,7 +93,23 @@ model OrderTracking {
   
   order       Order    @relation(fields: [orderId], references: [id])
   
+  
   @@map("order_tracking")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  price       Float
+  imageUrl    String?
+  category    String?
+  inStock     Boolean  @default(true)
+  stockCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("products")
 }
 
 enum Role {

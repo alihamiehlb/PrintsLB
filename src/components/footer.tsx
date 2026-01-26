@@ -13,11 +13,11 @@ export function Footer() {
               <span className="text-white font-bold text-xl">PrintsLB</span>
             </div>
             <p className="text-gray-400 mb-4">
-              Professional 3D printing services by Ali Hamieh. 
+              Professional 3D printing services by Ali Hamieh.
               High-quality prints, fast turnaround, and competitive pricing.
             </p>
             <p className="text-gray-500 text-sm">
-              © 2024 PrintsLB. All rights reserved.
+              © 2026 PrintsLB. All rights reserved.
             </p>
           </div>
 
@@ -25,23 +25,23 @@ export function Footer() {
             <h3 className="text-white font-semibold mb-4">Services</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/services" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/upload" className="text-gray-400 hover:text-white transition-colors">
                   3D Printing
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/upload" className="text-gray-400 hover:text-white transition-colors">
                   Prototyping
                 </Link>
               </li>
               <li>
-                <Link href="/services" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/upload" className="text-gray-400 hover:text-white transition-colors">
                   Custom Designs
                 </Link>
               </li>
               <li>
-                <Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">
-                  Bulk Orders
+                <Link href="/products" className="text-gray-400 hover:text-white transition-colors">
+                  Pre-Made Products
                 </Link>
               </li>
             </ul>
@@ -63,11 +63,6 @@ export function Footer() {
               <li>
                 <Link href="/track" className="text-gray-400 hover:text-white transition-colors">
                   Track Order
-                </Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
-                  Privacy Policy
                 </Link>
               </li>
             </ul>
