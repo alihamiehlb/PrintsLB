@@ -132,6 +132,25 @@ export default function UploadPage() {
     setError(null)
 
     try {
+      // Fetch pricing config from admin settings
+      let pricingConfig = {
+        sizeMultiplier: 1.0,
+        taxPercentage: 0.0,
+        baseFee: 0.0
+      }
+
+      try {
+        const configResponse = await fetch('/api/pricing-config')
+        if (configResponse.ok) {
+          const config = await configResponse.json()
+          if (config) {
+            pricingConfig = config
+          }
+        }
+      } catch (err) {
+        console.log('Using default pricing config')
+      }
+
       // Use accurate STL analysis
       const analysis = await STLAnalyzer.analyzeFile(file)
 
@@ -159,6 +178,10 @@ export default function UploadPage() {
         depth: Math.abs(analysis.boundingBox.max.z - analysis.boundingBox.min.z)
       }
 
+      // Calculate size factor (volume-based multiplier)
+      const volume = boundingBox.width * boundingBox.height * boundingBox.depth
+      const sizeFactor = Math.max(1.0, Math.min(2.0, 1.0 + (volume / 100000) * pricingConfig.sizeMultiplier))
+
       // Quality multiplier for pricing
       const qualityMultipliers = {
         'draft': 0.8,
@@ -171,11 +194,13 @@ export default function UploadPage() {
       // Support material estimation (10% extra if enabled)
       const supportMultiplier = printSettings.supportEnabled ? 1.1 : 1.0
 
-      // Final calculations
+      // Final calculations with size factor
       const adjustedWeight = usage.weight * supportMultiplier * qualityMultiplier
-      const baseCost = adjustedWeight * selectedMaterial.pricePerGram
+      const baseCost = adjustedWeight * selectedMaterial.pricePerGram * sizeFactor
       const profit = 2.50
-      const totalPrice = baseCost + profit
+      const subtotal = baseCost + profit + pricingConfig.baseFee
+      const tax = subtotal * (pricingConfig.taxPercentage / 100)
+      const totalPrice = subtotal + tax
 
       // Advanced print time calculation
       const adjustedPrintTime = usage.printTime * qualityMultiplier * (printSettings.supportEnabled ? 1.2 : 1.0)

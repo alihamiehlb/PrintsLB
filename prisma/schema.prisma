@@ -97,6 +97,19 @@ model OrderTracking {
   @@map("order_tracking")
 }
 
+model PricingConfig {
+  id                String   @id @default(cuid())
+  name              String   @unique
+  sizeMultiplier    Float    @default(1.0)  // Multiplier based on print size
+  taxPercentage     Float    @default(0.0)  // Tax/markup percentage
+  baseFee           Float    @default(0.0)  // Base fee per order
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@map("pricing_config")
+}
+
 model Product {
   id          String   @id @default(cuid())
   name        String

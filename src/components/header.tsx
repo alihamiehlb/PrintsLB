@@ -14,6 +14,7 @@ export function Header() {
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Upload STL', href: '/upload' },
+    { name: 'Collection', href: '/products' },
     { name: 'Track Order', href: '/track' },
     { name: 'About', href: '/about' },
   ]
@@ -97,7 +98,7 @@ export function Header() {
                     {item.name}
                   </Link>
                 ))}
-                
+
                 <div className="pt-4 border-t border-gray-700">
                   {session ? (
                     <>
