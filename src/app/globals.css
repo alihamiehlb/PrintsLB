@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #111827;
+  --color-foreground: #ffffff;
+}
+
+@layer base {
+  * {
+    border-color: #1f2937;
+  }
+  
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(to right, #60a5fa, #22d3ee);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .border-gradient {
+    background: linear-gradient(to right, #3b82f6, #06b6d4);
+  }
+  
+  .bg-gradient-tech {
+    background: linear-gradient(to bottom right, #111827, #1e3a5f 50%, #164e63 100%);
+  }
+  
+  .hover-lift {
+    transition: transform 200ms ease;
+  }
+  
+  .hover-lift:hover {
+    transform: scale(1.05);
+  }
+  
+  .glass-effect {
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 3s ease-in-out infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

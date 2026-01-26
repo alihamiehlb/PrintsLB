@@ -1,0 +1,53 @@
+{
+  "name": "PrintsLB - Professional 3D Printing Services",
+  "short_name": "PrintsLB",
+  "description": "High-quality 3D printing services by Ali Hamieh. Fast turnaround, competitive pricing, and expert craftsmanship.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "utilities"],
+  "lang": "en",
+  "scope": "/",
+  "shortcuts": [
+    {
+      "name": "Upload STL",
+      "short_name": "Upload",
+      "description": "Upload your STL file for 3D printing",
+      "url": "/upload",
+      "icons": [
+        {
+          "src": "/logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Track Order",
+      "short_name": "Track",
+      "description": "Track your 3D printing order",
+      "url": "/track",
+      "icons": [
+        {
+          "src": "/logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ]
+}

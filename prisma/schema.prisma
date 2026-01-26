@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  orders     Order[]
+  printJobs  PrintJob[]
+  
+  @@map("users")
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  color       String?
+  pricePerGram Float
+  available   Boolean  @default(true)
+  printerType String   @default("FDM")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  printJobs   PrintJob[]
+  
+  @@unique([name, color])
+  @@map("materials")
+}
+
+model PrintJob {
+  id          String   @id @default(cuid())
+  userId      String
+  materialId  String
+  fileName    String
+  fileSize    Float
+  printTime   Float    // in minutes
+  materialUsed Float   // in grams
+  baseCost    Float    // material cost
+  profit      Float    // $2.50 fixed profit
+  totalPrice  Float    // baseCost + profit
+  status      PrintJobStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user        User     @relation(fields: [userId], references: [id])
+  material    Material @relation(fields: [materialId], references: [id])
+  order       Order?
+  
+  @@map("print_jobs")
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  printJobId  String?     @unique
+  status      OrderStatus @default(PENDING)
+  totalAmount Float
+  notes       String?
+  fileUrl     String?
+  phoneNumber String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  user        User        @relation(fields: [userId], references: [id])
+  printJob    PrintJob?   @relation(fields: [printJobId], references: [id])
+  tracking    OrderTracking[]
+  
+  @@map("orders")
+}
+
+model OrderTracking {
+  id          String   @id @default(cuid())
+  orderId     String
+  status      String
+  description String
+  timestamp   DateTime @default(now())
+  
+  order       Order    @relation(fields: [orderId], references: [id])
+  
+  @@map("order_tracking")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  VALIDATING
+  CONFIRMED
+  PRINTING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum PrintJobStatus {
+  PENDING
+  CONFIRMED
+  PRINTING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
