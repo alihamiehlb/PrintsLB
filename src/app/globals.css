@@ -73,3 +73,16 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .max-w-7xl, .max-w-4xl {
+    max-width: none !important;
+  }
+}

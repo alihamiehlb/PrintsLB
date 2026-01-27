@@ -13,20 +13,38 @@ export function Header() {
   const { data: session } = useSession()
   const router = useRouter()
   const pathname = usePathname()
+  const [clickCount, setClickCount] = useState(0)
+  const [isZeroG, setIsZeroG] = useState(false)
 
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Upload STL', href: '/upload' },
+    { name: 'Materials', href: '/materials' },
     { name: 'Collection', href: '/products' },
     { name: 'Track Order', href: '/track' },
   ]
 
   const isHome = pathname === '/'
 
+  const handleLogoClick = (e: React.MouseEvent) => {
+    if (isZeroG) return
+    const newCount = clickCount + 1
+    setClickCount(newCount)
+
+    if (newCount === 5) {
+      setIsZeroG(true)
+      setClickCount(0)
+      setTimeout(() => setIsZeroG(false), 10000) // Reset after 10s
+    }
+
+    // Reset counter if too slow
+    setTimeout(() => setClickCount(0), 2000)
+  }
+
   return (
-    <header className="fixed top-0 w-full bg-gray-900/95 backdrop-blur-sm border-b border-blue-500/20 z-50">
+    <header className={`fixed top-0 w-full bg-gray-900/95 backdrop-blur-sm border-b border-blue-500/20 z-50 transition-all duration-1000 ${isZeroG ? 'py-8 shadow-[0_0_50px_rgba(59,130,246,0.5)]' : ''}`}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className={`flex justify-between items-center h-16 transition-transform duration-1000 ${isZeroG ? 'scale-110' : ''}`}>
           <div className="flex items-center space-x-4">
             {!isHome && (
               <button
@@ -37,12 +55,41 @@ export function Header() {
                 <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               </button>
             )}
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">PLB</span>
+            <div className="flex items-center space-x-2 cursor-pointer group" onClick={handleLogoClick}>
+              <motion.div
+                animate={isZeroG ? {
+                  rotateY: [0, 360, 720],
+                  y: [0, -20, 0],
+                  scale: [1, 1.2, 1]
+                } : {}}
+                transition={{ duration: 3, repeat: isZeroG ? Infinity : 0 }}
+                className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center relative overflow-hidden"
+              >
+                <span className="text-white font-bold text-sm relative z-10">PLB</span>
+                {isZeroG && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.5 }}
+                    className="absolute inset-0 bg-white"
+                  />
+                )}
+              </motion.div>
+              <div className="flex flex-col">
+                <span className="text-white font-bold text-xl hidden sm:inline">PrintsLB</span>
+                <AnimatePresence>
+                  {isZeroG && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 20 }}
+                      className="text-[10px] font-bold text-blue-400 tracking-tighter uppercase leading-none"
+                    >
+                      Antigravity Engaged
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </div>
-              <span className="text-white font-bold text-xl hidden sm:inline">PrintsLB</span>
-            </Link>
+            </div>
           </div>
 
           <div className="hidden md:flex items-center space-x-6">

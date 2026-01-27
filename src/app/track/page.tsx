@@ -199,45 +199,112 @@ export default function TrackOrder() {
                           className="border-t border-gray-700 bg-gray-900/30"
                         >
                           <div className="p-6 space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                              <div>
-                                <h4 className="text-gray-400 text-sm uppercase tracking-wider mb-3">Order Details</h4>
-                                <div className="space-y-2">
-                                  <p className="text-gray-300"><span className="text-gray-500">Full ID:</span> {order.id}</p>
-                                  {order.fileUrl && (
-                                    <div className="pt-2">
-                                      <a
-                                        href={order.fileUrl}
-                                        className="inline-flex items-center text-blue-400 hover:text-blue-300"
-                                        download
-                                      >
-                                        <Download className="w-4 h-4 mr-2" />
-                                        Download File
-                                      </a>
-                                    </div>
-                                  )}
+                            <div className="grid grid-cols-1 gap-8">
+                              {/* New Visual Stepper */}
+                              <div className="p-6 bg-gray-800/50 rounded-2xl border border-gray-700">
+                                <h4 className="text-gray-400 text-xs uppercase tracking-[0.2em] font-bold mb-8 text-center">Current Progress</h4>
+                                <div className="relative flex justify-between items-start max-w-2xl mx-auto px-4">
+                                  {/* Progress Line */}
+                                  <div className="absolute top-5 left-8 right-8 h-0.5 bg-gray-700">
+                                    <motion.div
+                                      className="h-full bg-blue-500"
+                                      initial={{ width: 0 }}
+                                      animate={{
+                                        width: `${(['PENDING', 'VALIDATING', 'CONFIRMED', 'PRINTING', 'SHIPPED', 'DELIVERED'].indexOf(order.status) / 5) * 100}%`
+                                      }}
+                                      transition={{ duration: 1 }}
+                                    />
+                                  </div>
+
+                                  {['PENDING', 'VERIFIED', 'PRINTING', 'SHIPPED', 'DONE'].map((label, idx) => {
+                                    const statuses = [
+                                      ['PENDING'],
+                                      ['VALIDATING', 'CONFIRMED'],
+                                      ['PRINTING'],
+                                      ['SHIPPED'],
+                                      ['DELIVERED']
+                                    ]
+                                    const currentIndex = statuses.findIndex(s => s.includes(order.status))
+                                    const isCompleted = idx < currentIndex
+                                    const isActive = idx === currentIndex
+
+                                    return (
+                                      <div key={label} className="relative flex flex-col items-center z-10 w-16">
+                                        <motion.div
+                                          className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors duration-500 ${isCompleted ? 'bg-blue-500 border-blue-500 text-white' :
+                                            isActive ? 'bg-gray-900 border-blue-500 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]' :
+                                              'bg-gray-900 border-gray-700 text-gray-600'
+                                            }`}
+                                          initial={false}
+                                          animate={isActive ? { scale: [1, 1.1, 1] } : { scale: 1 }}
+                                          transition={isActive ? { repeat: Infinity, duration: 2 } : {}}
+                                        >
+                                          {isCompleted ? (
+                                            <CheckCircle className="w-6 h-6" />
+                                          ) : (
+                                            <span className="text-sm font-bold">{idx + 1}</span>
+                                          )}
+                                        </motion.div>
+                                        <span className={`mt-3 text-[10px] font-bold uppercase tracking-wider text-center ${isActive ? 'text-blue-400' : isCompleted ? 'text-gray-300' : 'text-gray-600'
+                                          }`}>
+                                          {label}
+                                        </span>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                  <h4 className="text-gray-400 text-sm uppercase tracking-wider mb-4 font-semibold">Order Information</h4>
+                                  <div className="space-y-3 bg-gray-800/30 p-4 rounded-xl border border-gray-800">
+                                    <p className="text-sm text-gray-300"><span className="text-gray-500">Order ID:</span> <span className="font-mono">{order.id}</span></p>
+                                    <p className="text-sm text-gray-300"><span className="text-gray-500">Date:</span> {new Date(order.createdAt).toLocaleDateString()}</p>
+                                    {order.fileUrl && (
+                                      <div className="pt-2 flex flex-wrap gap-4">
+                                        <a
+                                          href={order.fileUrl}
+                                          className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                                          download
+                                        >
+                                          <Download className="w-4 h-4 mr-2" />
+                                          Download Technical File
+                                        </a>
+                                        <button
+                                          onClick={() => window.print()}
+                                          className="inline-flex items-center text-green-400 hover:text-green-300 text-sm font-medium transition-colors no-print"
+                                        >
+                                          <Download className="w-4 h-4 mr-2" />
+                                          Print Receipt
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+
                                   {order.notes && (
-                                    <div className="mt-4 p-3 bg-gray-800 rounded border border-gray-700">
-                                      <p className="text-gray-500 text-xs mb-1">Notes:</p>
-                                      <p className="text-gray-300 text-sm whitespace-pre-wrap">{order.notes}</p>
+                                    <div className="mt-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
+                                      <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Customer Notes:</p>
+                                      <p className="text-gray-300 text-sm whitespace-pre-wrap italic">"{order.notes}"</p>
                                     </div>
                                   )}
                                 </div>
-                              </div>
-                              <div>
-                                <h4 className="text-gray-400 text-sm uppercase tracking-wider mb-3">Tracking History</h4>
-                                <div className="space-y-4 border-l-2 border-gray-700 pl-4">
-                                  {order.tracking.map((track, idx) => (
-                                    <div key={idx} className="relative">
-                                      <div className="absolute -left-[21px] top-1 w-3 h-3 rounded-full bg-blue-500"></div>
-                                      <p className="text-white text-sm font-medium">{track.status}</p>
-                                      <p className="text-gray-500 text-xs">{new Date(track.timestamp).toLocaleString()}</p>
-                                      <p className="text-gray-400 text-sm mt-1">{track.description}</p>
-                                    </div>
-                                  ))}
-                                  {order.tracking.length === 0 && (
-                                    <p className="text-gray-500 italic">No tracking updates yet.</p>
-                                  )}
+
+                                <div>
+                                  <h4 className="text-gray-400 text-sm uppercase tracking-wider mb-4 font-semibold">Timeline History</h4>
+                                  <div className="space-y-4 border-l-2 border-gray-700 ml-2 pl-6">
+                                    {order.tracking.map((track, idx) => (
+                                      <div key={idx} className="relative">
+                                        <div className="absolute -left-[31px] top-1.5 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-gray-900"></div>
+                                        <p className="text-gray-100 text-sm font-bold">{track.status}</p>
+                                        <p className="text-gray-500 text-[10px] uppercase font-bold tracking-tighter">{new Date(track.timestamp).toLocaleString()}</p>
+                                        <p className="text-gray-400 text-sm mt-1 leading-relaxed">{track.description}</p>
+                                      </div>
+                                    ))}
+                                    {order.tracking.length === 0 && (
+                                      <p className="text-gray-500 italic text-sm">Waiting for initial review.</p>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>

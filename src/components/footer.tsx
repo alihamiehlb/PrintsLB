@@ -39,6 +39,11 @@ export function Footer() {
                   Pre-Made Products
                 </Link>
               </li>
+              <li>
+                <Link href="/materials" className="text-gray-400 hover:text-white transition-colors">
+                  Material Guide
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -53,6 +58,11 @@ export function Footer() {
               <li>
                 <Link href="/track" className="text-gray-400 hover:text-white transition-colors">
                   Track Order
+                </Link>
+              </li>
+              <li>
+                <Link href="/faq" className="text-gray-400 hover:text-white transition-colors">
+                  FAQ
                 </Link>
               </li>
             </ul>

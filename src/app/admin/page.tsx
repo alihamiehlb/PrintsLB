@@ -77,8 +77,12 @@ export default function AdminPanel() {
     totalUsers: 0,
     totalRevenue: 0,
     pendingOrders: 0,
-    totalProfit: 0
+    totalProfit: 0,
+    materialDistribution: [] as { name: string, value: number }[],
+    revenueHistory: [] as { name: string, revenue: number }[]
   })
+
+  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
   const [pricingSettings, setPricingSettings] = useState({
     taxRate: 0,
     serviceFee: 2.5,
@@ -909,34 +913,36 @@ export default function AdminPanel() {
                       <ResponsiveContainer width="100%" height={300}>
                         <PieChart>
                           <Pie
-                            data={orderStatusData}
+                            data={stats.materialDistribution}
                             cx="50%"
                             cy="50%"
                             labelLine={false}
-                            label={(entry) => entry.name}
+                            label={(entry) => `${entry.name} (${entry.value})`}
                             outerRadius={80}
                             fill="#8884d8"
                             dataKey="value"
                           >
-                            {orderStatusData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            {stats.materialDistribution.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
-                          <Tooltip />
+                          <Tooltip contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }} />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
 
                     <div className="rounded-2xl border border-gray-800 bg-gray-900/50 p-8 backdrop-blur-sm">
-                      <h3 className="text-xl font-bold text-white mb-6">Recent Revenue</h3>
+                      <h3 className="text-xl font-bold text-white mb-6">30-Day Revenue Trend</h3>
                       <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={revenueData}>
+                        <LineChart data={stats.revenueHistory}>
                           <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                          <XAxis dataKey="name" stroke="#9CA3AF" />
-                          <YAxis stroke="#9CA3AF" />
-                          <Tooltip contentStyle={{ backgroundColor: '#1F2937', border: 'none' }} />
-                          <Legend />
-                          <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={2} />
+                          <XAxis dataKey="name" stroke="#9CA3AF" fontSize={10} />
+                          <YAxis stroke="#9CA3AF" fontSize={12} />
+                          <Tooltip
+                            contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }}
+                            formatter={(value: any) => [`$${Number(value || 0).toFixed(2)}`, 'Revenue']}
+                          />
+                          <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={3} dot={{ fill: '#3B82F6', r: 4 }} activeDot={{ r: 6 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
