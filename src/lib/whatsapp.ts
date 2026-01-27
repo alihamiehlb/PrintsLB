@@ -15,7 +15,7 @@ export class WhatsAppService {
 
   static sendLargeFileNotification(file: File, userEmail?: string, customerNotes?: string): void {
     const fileSizeMB = file.size / (1024 * 1024)
-    
+
     const message = `🖨️ *Large 3D Print File Request*
 
 📁 *File Details:*
@@ -40,9 +40,41 @@ ${customerNotes || 'No special notes provided'}
   static sendWhatsAppMessage(message: string): void {
     const encodedMessage = encodeURIComponent(message)
     const whatsappUrl = `https://wa.me/${this.ADMIN_PHONE.replace(/[^\d]/g, '')}?text=${encodedMessage}`
-    
+
     // Open WhatsApp in new tab
     window.open(whatsappUrl, '_blank')
+  }
+
+  static sendOrderViaWhatsApp(orderDetails: {
+    orderId: string
+    fileName: string
+    material: string
+    totalPrice: number
+    customerEmail: string
+    customerPhone: string
+    notes?: string
+    fileUrl: string
+  }): void {
+    const message = `🛠️ *New Custom 3D Print Order*
+
+✅ *Order ID:* ${orderDetails.orderId}
+📁 *File Name:* ${orderDetails.fileName}
+🧵 *Material:* ${orderDetails.material}
+💰 *Estimated Price:* $${orderDetails.totalPrice.toFixed(2)}
+
+👤 *Customer Details:*
+• Email: ${orderDetails.customerEmail}
+• Phone: ${orderDetails.customerPhone}
+
+📝 *Notes:*
+${orderDetails.notes || 'None'}
+
+🔗 *Direct File Link:*
+${orderDetails.fileUrl}
+
+🚀 *Action Required:* Please review the file and confirm the final price with the customer.`
+
+    this.sendWhatsAppMessage(message)
   }
 
   static sendOrderConfirmation(orderDetails: {

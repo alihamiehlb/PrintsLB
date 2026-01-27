@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { Upload, File, DollarSign, Clock, Weight, CheckCircle, AlertCircle, Settings, Info, X, Calculator, Package, ArrowRight, MessageCircle } from 'lucide-react'
+import { Upload, File, DollarSign, Clock, Weight, CheckCircle, CheckCircle2, AlertCircle, Settings, Info, X, Calculator, Package, ArrowRight, MessageCircle, ShoppingBag } from 'lucide-react'
 import { STLAnalyzer } from '@/lib/stl-analyzer'
 import { WhatsAppService } from '@/lib/whatsapp'
 
@@ -68,6 +68,17 @@ export default function UploadPage() {
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [orderId, setOrderId] = useState('')
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+
+  // Auto-scroll to success message
+  useEffect(() => {
+    if (orderPlaced) {
+      const element = document.getElementById('success-message')
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }
+    }
+  }, [orderPlaced])
+
   const [materials, setMaterials] = useState<Material[]>([
     { id: '1', name: 'PLA', color: 'White', pricePerGram: 0.025, available: true },
     { id: '2', name: 'PLA', color: 'Black', pricePerGram: 0.025, available: true },
@@ -293,10 +304,25 @@ export default function UploadPage() {
         setOrderPlaced(true)
         setIsPlacingOrder(false)
 
-        // Redirect after delay
+        // Generate full file URL for WhatsApp
+        const fullFileUrl = `${window.location.origin}${fileUrl}`
+
+        // Trigger WhatsApp redirection
+        WhatsAppService.sendOrderViaWhatsApp({
+          orderId: result.order.id,
+          fileName: file.name,
+          material: selectedMaterial.name,
+          totalPrice: calculation.totalPrice,
+          customerEmail: session.user.email || 'N/A',
+          customerPhone: phoneNumber,
+          notes: customerNotes,
+          fileUrl: fullFileUrl
+        })
+
+        // Redirect after delay (longer delay to allow user to see success and WhatsApp trigger)
         setTimeout(() => {
           router.push('/track')
-        }, 2000)
+        }, 3000)
 
         // Reset form
         setFile(null)
@@ -907,33 +933,58 @@ export default function UploadPage() {
               {/* Order Success Message */}
               {orderPlaced && orderId && (
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-6 rounded-lg border-2 border-green-500 bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-6"
+                  id="success-message"
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="mt-12 rounded-[2.5rem] border-2 border-green-500 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-gray-900 p-8 md:p-12 shadow-2xl shadow-green-900/20"
                 >
                   <div className="text-center">
-                    <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                    <h3 className="text-2xl font-bold text-white mb-2">Order Placed Successfully!</h3>
-                    <div className="bg-gray-800/50 rounded-lg p-4 mb-4">
-                      <p className="text-sm text-gray-400 mb-1">Your Order ID:</p>
-                      <p className="text-xl font-mono font-bold text-green-400">{orderId}</p>
+                    <div className="relative inline-block mb-6">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 10 }}
+                      >
+                        <CheckCircle2 className="w-20 h-20 text-green-400" />
+                      </motion.div>
+                      <motion.div
+                        className="absolute inset-0 rounded-full bg-green-400/20"
+                        animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
                     </div>
-                    <p className="text-gray-300 mb-6">
-                      Save this order ID to track your order status. You can also find it in your dashboard.
-                    </p>
+
+                    <h3 className="text-3xl md:text-4xl font-black text-white mb-4">Order Received!</h3>
+
+                    <div className="max-w-md mx-auto bg-gray-950/50 rounded-2xl p-6 border border-gray-800 mb-8">
+                      <p className="text-gray-400 text-sm mb-2 uppercase tracking-widest font-bold">Order ID</p>
+                      <p className="text-2xl md:text-3xl font-mono font-black text-green-400 tracking-wider font-mono uppercase">{orderId}</p>
+                    </div>
+
+                    <div className="space-y-4 mb-10">
+                      <p className="text-xl text-green-300 font-semibold flex items-center justify-center">
+                        <MessageCircle className="w-6 h-6 mr-2" />
+                        Redirecting to WhatsApp...
+                      </p>
+                      <p className="text-gray-400 text-sm max-w-sm mx-auto">
+                        We've opened a WhatsApp chat with your order details and file link. Please send the message to confirm your print!
+                      </p>
+                    </div>
+
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                       <button
                         onClick={() => router.push(`/track?order=${orderId}`)}
-                        className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors duration-200"
+                        className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-blue-900/20 hover:scale-105 active:scale-95 flex items-center justify-center"
                       >
-                        Track Order
+                        <Package className="w-5 h-5 mr-2" /> Track My Print
                       </button>
                       <button
                         onClick={() => {
                           setOrderPlaced(false)
                           setOrderId('')
+                          setFile(null)
                         }}
-                        className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors duration-200"
+                        className="px-8 py-4 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-2xl transition-all duration-300 border border-gray-700 hover:scale-105 active:scale-95"
                       >
                         Place Another Order
                       </button>
