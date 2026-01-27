@@ -29,10 +29,14 @@ export async function GET(request: NextRequest) {
       })
     ])
 
+    const totalRevenueValue = totalRevenue._sum.totalAmount || 0
+    const totalProfitValue = totalRevenueValue * 0.2 // Assuming 20% margin if not tracked elsewhere
+
     return NextResponse.json({
       totalOrders,
       totalUsers,
-      totalRevenue: totalRevenue._sum.totalAmount || 0,
+      totalRevenue: totalRevenueValue,
+      totalProfit: totalProfitValue,
       pendingOrders
     })
   } catch (error) {

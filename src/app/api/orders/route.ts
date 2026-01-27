@@ -22,14 +22,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
-    // Find material based on name (using findFirst as name is not unique)
+    // Find material based on name
     const material = await prisma.material.findFirst({
       where: { name: data.materialName }
     })
 
-    // If material not found, we can't create a standardized print job easily.
-    // However, since this might be custom param, maybe we find one that matches default?
-    // Or we require it.
     if (!material) {
       return NextResponse.json({ error: 'Material not found: ' + data.materialName }, { status: 400 })
     }

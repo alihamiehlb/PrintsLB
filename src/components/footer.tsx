@@ -17,7 +17,7 @@ export function Footer() {
               High-quality prints, fast turnaround, and competitive pricing.
             </p>
             <p className="text-gray-500 text-sm">
-              © 2026 PrintsLB. All rights reserved.
+              © {new Date().getFullYear()} PrintsLB. All rights reserved.
             </p>
           </div>
 

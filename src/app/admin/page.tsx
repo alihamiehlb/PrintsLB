@@ -62,7 +62,7 @@ interface User {
 export default function AdminPanel() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'overview' | 'materials' | 'orders' | 'products' | 'users' | 'analytics'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'materials' | 'orders' | 'products' | 'users' | 'analytics' | 'pricing'>('overview')
 
   // State
   const [materials, setMaterials] = useState<Material[]>([])
@@ -76,6 +76,12 @@ export default function AdminPanel() {
     pendingOrders: 0,
     totalProfit: 0
   })
+  const [pricingSettings, setPricingSettings] = useState({
+    taxRate: 0,
+    serviceFee: 2.5,
+    scaleMultiplier: 1.0
+  })
+  const [isSavingSettings, setIsSavingSettings] = useState(false)
 
   // Modals
   const [showAddMaterial, setShowAddMaterial] = useState(false)
@@ -116,8 +122,40 @@ export default function AdminPanel() {
       fetchPrintJobs()
       fetchProducts()
       fetchUsers()
+      fetchPricingSettings()
     }
   }, [session])
+
+  const fetchPricingSettings = async () => {
+    try {
+      const response = await fetch('/api/admin/settings')
+      if (response.ok) {
+        const data = await response.json()
+        setPricingSettings(data)
+      }
+    } catch (error) {
+      console.error('Failed to fetch pricing settings:', error)
+    }
+  }
+
+  const handleUpdateSettings = async () => {
+    setIsSavingSettings(true)
+    try {
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pricingSettings)
+      })
+      if (response.ok) {
+        alert('Settings updated successfully')
+      }
+    } catch (error) {
+      console.error('Failed to update settings:', error)
+      alert('Failed to update settings')
+    } finally {
+      setIsSavingSettings(false)
+    }
+  }
 
   const fetchStats = async () => {
     try {
@@ -411,9 +449,16 @@ export default function AdminPanel() {
                 <h1 className="text-4xl font-bold text-white">Admin Panel</h1>
                 <div className="flex items-center space-x-2">
                   <button
+                    onClick={() => setActiveTab('pricing')}
+                    className="p-2 text-gray-400 hover:text-white transition-colors"
+                    title="Pricing Settings"
+                  >
+                    <DollarSign className="w-6 h-6" />
+                  </button>
+                  <button
                     onClick={() => router.push('/settings')}
                     className="p-2 text-gray-400 hover:text-white transition-colors"
-                    title="Settings"
+                    title="General Settings"
                   >
                     <Settings className="w-6 h-6" />
                   </button>
@@ -429,14 +474,15 @@ export default function AdminPanel() {
                   { id: 'orders', label: 'Orders', icon: Truck },
                   { id: 'products', label: 'Products', icon: Image },
                   { id: 'users', label: 'Users', icon: Users },
-                  { id: 'analytics', label: 'Analytics', icon: BarChart3 }
+                  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+                  { id: 'pricing', label: 'Pricing', icon: DollarSign }
                 ].map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`flex items-center space-x-2 py-2 px-4 rounded-md font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab.id
-                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
-                        : 'text-gray-400 hover:text-white'
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
+                      : 'text-gray-400 hover:text-white'
                       }`}
                   >
                     <tab.icon className="w-4 h-4" />
@@ -591,8 +637,8 @@ export default function AdminPanel() {
                             <td className="py-3 px-4 text-white">${material.pricePerGram.toFixed(3)}</td>
                             <td className="py-3 px-4">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${material.available
-                                  ? 'bg-green-500/20 text-green-400'
-                                  : 'bg-red-500/20 text-red-400'
+                                ? 'bg-green-500/20 text-green-400'
+                                : 'bg-red-500/20 text-red-400'
                                 }`}>
                                 {material.available ? 'Available' : 'Unavailable'}
                               </span>
@@ -791,8 +837,8 @@ export default function AdminPanel() {
                             <td className="py-3 px-4 text-gray-300">{user.email}</td>
                             <td className="py-3 px-4">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.role === 'ADMIN'
-                                  ? 'bg-purple-500/20 text-purple-400'
-                                  : 'bg-blue-500/20 text-blue-400'
+                                ? 'bg-purple-500/20 text-purple-400'
+                                : 'bg-blue-500/20 text-blue-400'
                                 }`}>
                                 {user.role}
                               </span>
@@ -813,6 +859,70 @@ export default function AdminPanel() {
                       <p className="text-gray-400">No users found</p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Pricing Tab */}
+              {activeTab === 'pricing' && (
+                <div className="rounded-2xl border border-gray-800 bg-gray-900/50 p-8 backdrop-blur-sm">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-bold text-white">Global Pricing Settings</h2>
+                    <div className="flex items-center space-x-2">
+                      <DollarSign className="w-6 h-6 text-yellow-400" />
+                      <span className="text-gray-400">Configure cost multipliers and fees</span>
+                    </div>
+                  </div>
+                  <div className="max-w-md space-y-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Tax Rate (%)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={pricingSettings.taxRate}
+                        onChange={(e) => setPricingSettings(prev => ({ ...prev, taxRate: parseFloat(e.target.value) }))}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">Applied to the total order amount.</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Service Fee ($)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={pricingSettings.serviceFee}
+                        onChange={(e) => setPricingSettings(prev => ({ ...prev, serviceFee: parseFloat(e.target.value) }))}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">Fixed profit added to every print job.</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Scale Multiplier
+                      </label>
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={pricingSettings.scaleMultiplier}
+                        onChange={(e) => setPricingSettings(prev => ({ ...prev, scaleMultiplier: parseFloat(e.target.value) }))}
+                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <p className="mt-1 text-xs text-gray-500">Global multiplier for material costs.</p>
+                    </div>
+
+                    <button
+                      onClick={handleUpdateSettings}
+                      disabled={isSavingSettings}
+                      className="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-lg hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                    >
+                      {isSavingSettings ? 'Saving...' : 'Save Settings'}
+                    </button>
+                  </div>
                 </div>
               )}
 

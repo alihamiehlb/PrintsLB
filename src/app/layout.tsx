@@ -16,6 +16,11 @@ export const metadata: Metadata = {
   creator: 'PrintsLB',
   publisher: 'PrintsLB',
   metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
   openGraph: {
     title: 'PrintsLB - Professional 3D Printing Services',
     description: 'High-quality 3D printing services by Ali Hamieh. Fast turnaround, competitive pricing, and expert craftsmanship.',
