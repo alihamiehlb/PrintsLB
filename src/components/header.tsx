@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { Menu, X, ShoppingCart, User, ArrowLeft, ShieldCheck } from 'lucide-react'
@@ -17,6 +17,7 @@ export function Header() {
   const [isZeroG, setIsZeroG] = useState(false)
   const [gameActive, setGameActive] = useState(false)
   const [score, setScore] = useState(0)
+  const [highScore, setHighScore] = useState(0)
   const [logoPos, setLogoPos] = useState({ x: 0, y: 0 })
 
   const navigation = [
@@ -29,12 +30,22 @@ export function Header() {
 
   const isHome = pathname === '/'
 
+  // Load high score
+  useEffect(() => {
+    const saved = localStorage.getItem('logo_game_high_score')
+    if (saved) setHighScore(parseInt(saved))
+  }, [])
+
   const getRandomPos = () => {
-    // Keep within safe viewport bounds
-    const margin = 100
+    if (typeof window === 'undefined') return { x: 0, y: 0 }
+
+    // Mobile-friendly bounds
+    const isMobile = window.innerWidth < 768
+    const margin = isMobile ? 60 : 120
+
     return {
-      x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth - margin * 2 : 500) + margin,
-      y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight - margin * 2 : 500) + margin
+      x: Math.random() * (window.innerWidth - margin * 2) + margin,
+      y: Math.random() * (window.innerHeight - margin * 2) + margin
     }
   }
 
@@ -54,8 +65,15 @@ export function Header() {
     setTimeout(() => setClickCount(0), 2000)
   }
 
-  const handleCatch = () => {
-    setScore(s => s + 1)
+  const handleCatch = (e: React.MouseEvent | React.TouchEvent) => {
+    const newScore = score + 1
+    setScore(newScore)
+
+    if (newScore > highScore) {
+      setHighScore(newScore)
+      localStorage.setItem('logo_game_high_score', newScore.toString())
+    }
+
     setLogoPos(getRandomPos())
     // Add a quick feedback effect
     setIsZeroG(true)
@@ -97,7 +115,7 @@ export function Header() {
                       animate={{ opacity: 1, x: 0 }}
                       className="text-[10px] font-bold text-green-400 tracking-tighter uppercase leading-none"
                     >
-                      Game Mode: {score} Caught!
+                      Score: {score} | Top: {highScore}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -115,15 +133,19 @@ export function Header() {
                     top: logoPos.y
                   }}
                   transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                  className="fixed z-[100] cursor-crosshair"
-                  onClick={handleCatch}
+                  className="fixed z-[100] cursor-crosshair -translate-x-1/2 -translate-y-1/2"
+                  onMouseDown={handleCatch}
+                  onTouchStart={handleCatch}
                 >
                   <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-                    className="w-16 h-16 bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600 rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,0.8)] border-2 border-white/20"
+                    animate={{ rotate: 360, scale: [1, 1.05, 1] }}
+                    transition={{
+                      rotate: { duration: 4, repeat: Infinity, ease: 'linear' },
+                      scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                    }}
+                    className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600 rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,0.8)] border-2 border-white/20"
                   >
-                    <span className="text-white font-black text-2xl">PLB</span>
+                    <span className="text-white font-black text-xl md:text-2xl">PLB</span>
                   </motion.div>
                 </motion.div>
 
@@ -131,7 +153,7 @@ export function Header() {
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
                   onClick={() => setGameActive(false)}
-                  className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[101] bg-white text-gray-900 px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-gray-100 transition-all border-4 border-blue-500"
+                  className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[101] bg-white text-gray-900 px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-gray-100 transition-all border-4 border-blue-500 active:scale-95"
                 >
                   EXIT GAME
                 </motion.button>
