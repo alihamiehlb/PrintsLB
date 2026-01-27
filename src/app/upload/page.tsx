@@ -291,9 +291,12 @@ export default function UploadPage() {
         const result = await response.json()
         setOrderId(result.order.id)
         setOrderPlaced(true)
+        setIsPlacingOrder(false)
 
-        // Redirect to track page
-        router.push('/track')
+        // Redirect after delay
+        setTimeout(() => {
+          router.push('/track')
+        }, 2000)
 
         // Reset form
         setFile(null)
@@ -868,6 +871,11 @@ export default function UploadPage() {
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                       Placing Order...
+                    </>
+                  ) : orderPlaced ? (
+                    <>
+                      <CheckCircle className="mr-2 h-5 w-5" />
+                      Success! Redirecting...
                     </>
                   ) : (
                     <>
