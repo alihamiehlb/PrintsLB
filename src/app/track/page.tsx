@@ -172,7 +172,11 @@ export default function TrackOrder() {
                       </div>
                       <div className="flex items-center space-x-6">
                         <div className="text-right hidden sm:block">
-                          <p className="text-white font-bold">${order.totalAmount.toFixed(2)}</p>
+                          {order.totalAmount > 0 ? (
+                            <p className="text-white font-bold">${order.totalAmount.toFixed(2)}</p>
+                          ) : (
+                            <p className="text-yellow-400 text-xs font-bold uppercase mb-1">Price Pending Review</p>
+                          )}
                           <span className={`text-xs px-2 py-1 rounded-full border ${getStatusColor(order.status)}`}>
                             {order.status}
                           </span>

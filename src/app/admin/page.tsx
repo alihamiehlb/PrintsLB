@@ -29,6 +29,8 @@ interface PrintJob {
   fileName: string
   materialName: string
   totalPrice: number
+  baseCost: number
+  profit: number
   status: string
   createdAt: string
   userName: string
@@ -275,6 +277,22 @@ export default function AdminPanel() {
     }
   }
 
+  const handleUpdateJobPrice = async (id: string, baseCost: number, totalPrice: number) => {
+    try {
+      const response = await fetch('/api/admin/print-jobs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, baseCost, totalPrice })
+      })
+
+      if (response.ok) {
+        await Promise.all([fetchPrintJobs(), fetchStats()])
+      }
+    } catch (error) {
+      console.error("Failed to update job price", error)
+    }
+  }
+
   const handleUpdateJobStatus = async (id: string, status: string) => {
     try {
       const response = await fetch('/api/admin/print-jobs', {
@@ -284,7 +302,7 @@ export default function AdminPanel() {
       })
 
       if (response.ok) {
-        await fetchPrintJobs()
+        await Promise.all([fetchPrintJobs(), fetchStats()])
       }
     } catch (error) {
       console.error("Failed to update job status", error)
@@ -295,7 +313,9 @@ export default function AdminPanel() {
     if (!confirm('Are you sure you want to delete this order?')) return
     try {
       const res = await fetch(`/api/admin/print-jobs?id=${id}`, { method: 'DELETE' })
-      if (res.ok) fetchPrintJobs()
+      if (res.ok) {
+        await Promise.all([fetchPrintJobs(), fetchStats()])
+      }
     } catch (err) {
       console.error(err)
     }
@@ -688,7 +708,30 @@ export default function AdminPanel() {
                             )}
                           </div>
                           <div className="text-right">
-                            <p className="text-2xl font-bold text-white">${job.totalPrice ? job.totalPrice.toFixed(2) : '0.00'}</p>
+                            <div className="flex flex-col items-end gap-2 mb-4">
+                              <div className="flex items-center gap-2">
+                                <label className="text-xs text-gray-500 font-bold uppercase">Cost ($)</label>
+                                <input
+                                  type="number"
+                                  defaultValue={job.baseCost}
+                                  onBlur={(e) => handleUpdateJobPrice(job.id, parseFloat(e.target.value), job.totalPrice)}
+                                  className="w-20 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white text-sm"
+                                  placeholder="Cost"
+                                />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <label className="text-xs text-gray-500 font-bold uppercase">Sell ($)</label>
+                                <input
+                                  type="number"
+                                  defaultValue={job.totalPrice}
+                                  onBlur={(e) => handleUpdateJobPrice(job.id, job.baseCost, parseFloat(e.target.value))}
+                                  className="w-20 bg-gray-900 border border-gray-700 rounded px-2 py-1 text-white text-sm"
+                                  placeholder="Selling"
+                                />
+                              </div>
+                              <p className="text-xs font-bold text-green-400">Profit: ${(job.totalPrice - job.baseCost).toFixed(2)}</p>
+                            </div>
+
                             <div className="flex items-center justify-end space-x-2 mt-2">
                               {getStatusIcon(job.status)}
                               <span className="text-gray-400">{job.status}</span>

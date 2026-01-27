@@ -14,23 +14,22 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const [totalOrders, totalUsers, totalRevenue, pendingOrders] = await Promise.all([
+    const [totalOrders, totalUsers, totalRevenue, totalProfit, pendingOrders] = await Promise.all([
       prisma.order.count(),
       prisma.user.count(),
       prisma.order.aggregate({
-        _sum: {
-          totalAmount: true
-        }
+        _sum: { totalAmount: true }
+      }),
+      prisma.printJob.aggregate({
+        _sum: { profit: true }
       }),
       prisma.order.count({
-        where: {
-          status: 'PENDING'
-        }
+        where: { status: 'PENDING' }
       })
     ])
 
     const totalRevenueValue = totalRevenue._sum.totalAmount || 0
-    const totalProfitValue = totalRevenueValue * 0.2 // Assuming 20% margin if not tracked elsewhere
+    const totalProfitValue = totalProfit._sum.profit || 0
 
     return NextResponse.json({
       totalOrders,

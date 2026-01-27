@@ -13,36 +13,29 @@ export async function GET() {
 
     const orders = await prisma.order.findMany({
       include: {
-        user: {
-          select: {
-            name: true,
-            email: true
+        user: { select: { name: true, email: true } },
+        printJob: {
+          include: {
+            material: { select: { name: true } }
           }
         }
       },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      orderBy: { createdAt: 'desc' }
     })
 
-    const printJobs = orders.map(order => {
-      let notes = 'No notes provided'
-      try {
-        if (order.notes) {
-          notes = order.notes
-        }
-      } catch (e) { }
-
-      return {
-        id: order.id,
-        status: order.status,
-        totalPrice: order.totalAmount,
-        createdAt: order.createdAt.toISOString(),
-        userName: (order.user as any)?.name || (order.user as any)?.email || 'Unknown User',
-        customerNotes: notes,
-        fileUrl: (order as any).fileUrl
-      }
-    })
+    const printJobs = orders.map((order: any) => ({
+      id: order.id,
+      status: order.status,
+      totalPrice: order.totalAmount,
+      baseCost: order.printJob?.baseCost || 0,
+      profit: order.printJob?.profit || 0,
+      createdAt: order.createdAt.toISOString(),
+      userName: (order.user as any)?.name || (order.user as any)?.email || 'Unknown User',
+      customerNotes: order.notes || 'No notes provided',
+      fileUrl: order.fileUrl || '',
+      fileName: order.printJob?.fileName || 'Unknown File',
+      materialName: order.printJob?.material?.name || 'Standard'
+    }))
 
     return NextResponse.json(printJobs)
   } catch (error) {
@@ -59,24 +52,52 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id, status } = await request.json()
+    const { id, status, baseCost, totalPrice } = await request.json()
 
-    const order = await prisma.order.update({
+    // Find the order first to get printJobId
+    const existingOrder = await prisma.order.findUnique({
+      where: { id },
+      include: { printJob: true }
+    })
+
+    if (!existingOrder) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+    }
+
+    // Update PrintJob if costs are provided
+    if (existingOrder.printJobId && (baseCost !== undefined || totalPrice !== undefined)) {
+      const newBaseCost = baseCost !== undefined ? parseFloat(baseCost) : existingOrder.printJob?.baseCost || 0
+      const newTotalPrice = totalPrice !== undefined ? parseFloat(totalPrice) : existingOrder.totalAmount || 0
+      const newProfit = newTotalPrice - newBaseCost
+
+      await prisma.printJob.update({
+        where: { id: existingOrder.printJobId },
+        data: {
+          baseCost: newBaseCost,
+          totalPrice: newTotalPrice,
+          profit: newProfit
+        }
+      })
+    }
+
+    // Update Order
+    const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
-        status: status,
-        tracking: {
+        status: status || existingOrder.status,
+        totalAmount: totalPrice !== undefined ? parseFloat(totalPrice) : existingOrder.totalAmount,
+        tracking: status ? {
           create: {
             status: status,
-            description: `Order status updated to ${status}`
+            description: `Order updated by admin`
           }
-        }
+        } : undefined
       }
     })
 
-    return NextResponse.json(order)
+    return NextResponse.json(updatedOrder)
   } catch (error) {
-    console.error('Failed to update order status:', error)
+    console.error('Failed to update order:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
@@ -89,18 +110,20 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id } = await request.json()
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
 
-    // Delete tracking first
-    await prisma.orderTracking.deleteMany({
-      where: { orderId: id }
-    })
+    if (!id) {
+      return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+    }
 
-    const order = await prisma.order.delete({
-      where: { id }
-    })
+    // Delete tracking and order in a transaction
+    await prisma.$transaction([
+      prisma.orderTracking.deleteMany({ where: { orderId: id } }),
+      prisma.order.delete({ where: { id } })
+    ])
 
-    return NextResponse.json(order)
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Failed to delete order:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
