@@ -37,7 +37,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-900">
       <Header />
-      
+
       <main className="pt-16">
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -48,7 +48,7 @@ export default function Dashboard() {
             >
               <h1 className="text-4xl font-bold text-white mb-4">Welcome to PrintsLB</h1>
               <p className="text-xl text-gray-300 mb-8">Your 3D Printing Dashboard</p>
-              
+
               <div className="bg-blue-900/20 border border-blue-500/50 rounded-lg p-6 mb-8">
                 <h2 className="text-xl font-semibold text-white mb-3">Get Started</h2>
                 <p className="text-gray-300 mb-4">
@@ -61,7 +61,7 @@ export default function Dashboard() {
                   Upload Your First File
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -91,25 +91,28 @@ export default function Dashboard() {
               <div className="bg-gray-800 border border-gray-700 rounded-lg p-8">
                 <h2 className="text-2xl font-bold text-white mb-6">Quick Actions</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <button 
+                  <button
                     onClick={() => router.push('/track')}
                     className="p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-200"
                   >
                     <ShoppingBag className="w-6 h-6 text-blue-400 mb-2 mx-auto" />
                     <span className="text-white text-sm">Track Orders</span>
                   </button>
-                  <button 
+                  <button
                     onClick={() => router.push('/upload')}
                     className="p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-200"
                   >
                     <User className="w-6 h-6 text-green-400 mb-2 mx-auto" />
                     <span className="text-white text-sm">New Order</span>
                   </button>
-                  <button className="p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-200">
+                  <button
+                    onClick={() => router.push('/settings')}
+                    className="p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-200"
+                  >
                     <Settings className="w-6 h-6 text-purple-400 mb-2 mx-auto" />
                     <span className="text-white text-sm">Profile Settings</span>
                   </button>
-                  <button 
+                  <button
                     onClick={() => router.push('/')}
                     className="p-4 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors duration-200"
                   >
