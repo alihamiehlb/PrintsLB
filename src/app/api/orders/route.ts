@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
             description: 'Order received',
           }
         }
-      },
+      } as any,
       include: {
         printJob: true,
         tracking: true

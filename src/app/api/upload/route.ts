@@ -15,6 +15,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
+    // Check file size (additional server-side check)
+    const MAX_SIZE = 50 * 1024 * 1024 // 50MB
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json({ error: 'File size exceeds 50MB limit' }, { status: 400 })
+    }
+
     // Validate file type
     if (!file.name.toLowerCase().endsWith('.stl')) {
       return NextResponse.json({ error: 'Only STL files are allowed' }, { status: 400 })

@@ -38,9 +38,9 @@ export async function GET() {
         status: order.status,
         totalPrice: order.totalAmount,
         createdAt: order.createdAt.toISOString(),
-        userName: order.user?.name || order.user?.email || 'Unknown User',
+        userName: (order.user as any)?.name || (order.user as any)?.email || 'Unknown User',
         customerNotes: notes,
-        fileUrl: order.fileUrl
+        fileUrl: (order as any).fileUrl
       }
     })
 

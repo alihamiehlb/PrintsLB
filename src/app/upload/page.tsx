@@ -327,14 +327,14 @@ export default function UploadPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-cyan-900/20">
       <Header />
 
-      <div className="px-6 py-12 md:px-12">
+      <div className="px-4 py-8 md:px-12 md:py-12">
         <motion.div
           className="mx-auto max-w-4xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
         >
-          <h1 className="mb-8 text-center text-4xl font-bold text-white md:text-5xl">
+          <h1 className="mb-8 text-center text-3xl font-bold text-white md:text-5xl">
             Upload Your <span className="text-gradient">STL File</span>
           </h1>
 
@@ -352,10 +352,10 @@ export default function UploadPage() {
           >
             <Upload className={`mx-auto mb-4 h-16 w-16 ${dragActive ? 'text-blue-400' : 'text-gray-400'}`} />
             <p className="mb-2 text-lg font-semibold text-white">
-              {file ? file.name : 'Drop your STL file here or click to browse'}
+              {file ? file.name : 'Choose an STL file to get started'}
             </p>
-            <p className="mb-4 text-gray-400">
-              Maximum file size: 50MB
+            <p className="mb-4 text-gray-400 text-sm">
+              Maximum file size: 50MB. Drag & drop available on desktop.
             </p>
             <input
               type="file"
@@ -366,7 +366,7 @@ export default function UploadPage() {
             />
             <label
               htmlFor="file-upload"
-              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-3 font-semibold text-white cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105"
+              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4 font-semibold text-white cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 w-full sm:w-auto"
             >
               <Upload className="mr-2 h-5 w-5" />
               Choose File
@@ -378,7 +378,7 @@ export default function UploadPage() {
                   setFile(null)
                   setCalculation(null)
                 }}
-                className="ml-4 inline-flex items-center justify-center rounded-lg border border-red-500 bg-red-500/20 px-6 py-3 font-semibold text-red-400 hover:bg-red-500/30 transition-all duration-300"
+                className="mt-4 sm:mt-0 sm:ml-4 inline-flex items-center justify-center rounded-lg border border-red-500 bg-red-500/20 px-6 py-4 font-semibold text-red-400 hover:bg-red-500/30 transition-all duration-300 w-full sm:w-auto"
               >
                 <X className="mr-2 h-5 w-5" />
                 Remove
@@ -841,13 +841,24 @@ export default function UploadPage() {
               </div>
 
               {/* Total Price */}
-              <div className="mb-6 rounded-lg border-2 border-blue-500 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xl font-semibold text-white">Total Price</span>
+              <div className="mb-6 rounded-lg border-2 border-blue-500 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-4 md:p-6">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                  <div className="text-center md:text-left">
+                    <span className="text-xl font-semibold text-white">Total Estimated Price</span>
                     <p className="text-sm text-gray-400 mt-1">Includes material cost + $2.50 service fee</p>
                   </div>
-                  <span className="text-3xl font-bold text-gradient">${calculation.totalPrice.toFixed(2)}</span>
+                  <div className="flex flex-col items-center md:items-end">
+                    <span className="text-4xl font-bold text-gradient">${calculation.totalPrice.toFixed(2)}</span>
+                    <span className="text-xs text-blue-400 font-medium">USD</span>
+                  </div>
+                </div>
+
+                {/* Pricing Disclaimer */}
+                <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start space-x-2">
+                  <Info className="w-4 h-4 text-amber-400 mt-1 flex-shrink-0" />
+                  <p className="text-xs text-amber-200/80 leading-relaxed italic">
+                    <span className="font-bold">Important:</span> This is only an estimated price. The final total may increase or decrease after our team reviews your file for printability and final material usage.
+                  </p>
                 </div>
               </div>
 
@@ -865,7 +876,7 @@ export default function UploadPage() {
                 <button
                   onClick={handleOrder}
                   disabled={isPlacingOrder}
-                  className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-8 py-4 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full md:w-auto inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-8 py-4 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isPlacingOrder ? (
                     <>
