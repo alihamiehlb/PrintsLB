@@ -2,19 +2,85 @@
 
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Settings, User, Bell, Lock, Palette } from 'lucide-react'
 
 export default function SettingsPage() {
-    const { data: session } = useSession()
+    const { data: session, status } = useSession()
     const router = useRouter()
+
     const [activeTab, setActiveTab] = useState<'profile' | 'notifications' | 'privacy'>('profile')
+    const [name, setName] = useState('')
+    const [currentPassword, setCurrentPassword] = useState('')
+    const [newPassword, setNewPassword] = useState('')
+    const [loading, setLoading] = useState(false)
+    const [message, setMessage] = useState({ type: '', text: '' })
+
+    // Initialize name when session becomes available
+    useEffect(() => {
+        if (session?.user?.name) {
+            setName(session.user.name)
+        }
+    }, [session])
+
+    if (status === 'loading') {
+        return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">Loading...</div>
+    }
 
     if (!session) {
         router.push('/auth/signin')
         return null
+    }
+
+    const handleUpdateProfile = async () => {
+        setLoading(true)
+        setMessage({ type: '', text: '' })
+        try {
+            const res = await fetch('/api/user/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            })
+            if (res.ok) {
+                setMessage({ type: 'success', text: 'Profile updated successfully!' })
+            } else {
+                const data = await res.json()
+                setMessage({ type: 'error', text: data.error || 'Failed to update profile' })
+            }
+        } catch (err) {
+            console.error(err)
+            setMessage({ type: 'error', text: 'An error occurred' })
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleUpdatePassword = async () => {
+        if (!newPassword) return
+        setLoading(true)
+        setMessage({ type: '', text: '' })
+        try {
+            const res = await fetch('/api/user/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password: newPassword })
+            })
+            if (res.ok) {
+                setMessage({ type: 'success', text: 'Password updated successfully!' })
+                setNewPassword('')
+                setCurrentPassword('')
+            } else {
+                const data = await res.json()
+                setMessage({ type: 'error', text: data.error || 'Failed to update password' })
+            }
+        } catch (err) {
+            console.error(err)
+            setMessage({ type: 'error', text: 'An error occurred' })
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -26,13 +92,19 @@ export default function SettingsPage() {
                     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                         <h1 className="text-4xl font-bold text-white mb-8">Settings</h1>
 
+                        {message.text && (
+                            <div className={`mb-6 p-4 rounded-lg border ${message.type === 'success' ? 'bg-green-500/10 border-green-500/50 text-green-400' : 'bg-red-500/10 border-red-500/50 text-red-400'}`}>
+                                {message.text}
+                            </div>
+                        )}
+
                         <div className="bg-gray-800/50 rounded-2xl border border-gray-700 overflow-hidden">
                             <div className="flex border-b border-gray-700">
                                 <button
                                     onClick={() => setActiveTab('profile')}
                                     className={`flex-1 px-6 py-4 text-left ${activeTab === 'profile'
-                                            ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500'
-                                            : 'text-gray-400 hover:text-white'
+                                        ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500'
+                                        : 'text-gray-400 hover:text-white transition-all'
                                         }`}
                                 >
                                     <User className="w-5 h-5 inline mr-2" />
@@ -41,8 +113,8 @@ export default function SettingsPage() {
                                 <button
                                     onClick={() => setActiveTab('notifications')}
                                     className={`flex-1 px-6 py-4 text-left ${activeTab === 'notifications'
-                                            ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500'
-                                            : 'text-gray-400 hover:text-white'
+                                        ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500'
+                                        : 'text-gray-400 hover:text-white transition-all'
                                         }`}
                                 >
                                     <Bell className="w-5 h-5 inline mr-2" />
@@ -51,8 +123,8 @@ export default function SettingsPage() {
                                 <button
                                     onClick={() => setActiveTab('privacy')}
                                     className={`flex-1 px-6 py-4 text-left ${activeTab === 'privacy'
-                                            ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500'
-                                            : 'text-gray-400 hover:text-white'
+                                        ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500'
+                                        : 'text-gray-400 hover:text-white transition-all'
                                         }`}
                                 >
                                     <Lock className="w-5 h-5 inline mr-2" />
@@ -67,7 +139,8 @@ export default function SettingsPage() {
                                             <label className="block text-sm font-medium text-gray-400 mb-2">Name</label>
                                             <input
                                                 type="text"
-                                                defaultValue={session.user?.name || ''}
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
                                                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
                                             />
                                         </div>
@@ -75,13 +148,17 @@ export default function SettingsPage() {
                                             <label className="block text-sm font-medium text-gray-400 mb-2">Email</label>
                                             <input
                                                 type="email"
-                                                defaultValue={session.user?.email || ''}
+                                                value={session.user?.email || ''}
                                                 disabled
-                                                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-gray-400"
+                                                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-gray-500 cursor-not-allowed"
                                             />
                                         </div>
-                                        <button className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                                            Save Changes
+                                        <button
+                                            onClick={handleUpdateProfile}
+                                            disabled={loading}
+                                            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-all font-semibold"
+                                        >
+                                            {loading ? 'Saving...' : 'Save Changes'}
                                         </button>
                                     </div>
                                 )}
@@ -113,15 +190,23 @@ export default function SettingsPage() {
                                                 <input
                                                     type="password"
                                                     placeholder="Current Password"
+                                                    value={currentPassword}
+                                                    onChange={(e) => setCurrentPassword(e.target.value)}
                                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
                                                 />
                                                 <input
                                                     type="password"
                                                     placeholder="New Password"
+                                                    value={newPassword}
+                                                    onChange={(e) => setNewPassword(e.target.value)}
                                                     className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white"
                                                 />
-                                                <button className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                                                    Update Password
+                                                <button
+                                                    onClick={handleUpdatePassword}
+                                                    disabled={loading || !newPassword}
+                                                    className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-all font-semibold"
+                                                >
+                                                    {loading ? 'Updating...' : 'Update Password'}
                                                 </button>
                                             </div>
                                         </div>

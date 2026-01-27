@@ -3,6 +3,9 @@ import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
 
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60 // 60 seconds is the max for Vercel hobby info
+
 export async function POST(request: NextRequest) {
   try {
     const data = await request.formData()

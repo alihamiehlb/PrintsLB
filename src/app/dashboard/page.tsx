@@ -1,8 +1,8 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
@@ -11,12 +11,31 @@ import { User, ShoppingBag, Settings } from 'lucide-react'
 export default function Dashboard() {
   const { data: session, status } = useSession()
   const router = useRouter()
+  const [orderCount, setOrderCount] = useState(0)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin')
     }
   }, [status, router])
+
+  useEffect(() => {
+    if (session) {
+      fetchOrderCount()
+    }
+  }, [session])
+
+  const fetchOrderCount = async () => {
+    try {
+      const res = await fetch('/api/orders')
+      if (res.ok) {
+        const orders = await res.json()
+        setOrderCount(orders.length)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   if (status === 'loading') {
     return (
@@ -74,7 +93,7 @@ export default function Dashboard() {
                 <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <ShoppingBag className="w-8 h-8 text-green-400" />
-                    <span className="text-2xl font-bold text-white">0</span>
+                    <span className="text-2xl font-bold text-white">{orderCount}</span>
                   </div>
                   <p className="text-gray-300">Total Orders</p>
                 </div>
