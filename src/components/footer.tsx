@@ -31,12 +31,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/upload" className="text-gray-400 hover:text-white transition-colors">
-                  Prototyping
-                </Link>
-              </li>
-              <li>
-                <Link href="/upload" className="text-gray-400 hover:text-white transition-colors">
-                  Custom Designs
+                  Upload STL
                 </Link>
               </li>
               <li>
