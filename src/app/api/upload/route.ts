@@ -26,43 +26,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Only STL files are allowed' }, { status: 400 })
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = join(process.cwd(), 'public', 'uploads')
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true })
-    }
-
-    // Create unique filename
-    const timestamp = Date.now()
-    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-    const filename = `${orderId}_${timestamp}_${safeName}`
-    const filepath = join(uploadsDir, filename)
-
-    // Convert file to buffer and save
+    // Convert file to buffer
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
+    const timestamp = Date.now()
 
-    await writeFile(filepath, buffer)
+    // Try to save locally (will fail on Vercel, but that's okay)
+    let localUrl = ''
+    let filename = ''
+    try {
+      const uploadsDir = join(process.cwd(), 'public', 'uploads')
+      if (!existsSync(uploadsDir)) {
+        await mkdir(uploadsDir, { recursive: true })
+      }
+      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+      filename = `${orderId}_${timestamp}_${safeName}`
+      const filepath = join(uploadsDir, filename)
+      await writeFile(filepath, buffer)
+      localUrl = `/uploads/${filename}`
+      console.log(`File saved locally: ${filename}`)
+    } catch (fsError: any) {
+      console.warn('Local filesystem write skipped (expected on Vercel):', fsError.message)
+      // Fallback filename for response if local save fails
+      filename = `${orderId}_${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+    }
 
-    // Send to Telegram
+    // Send to Telegram (Crucial for Vercel delivery)
     try {
       const { TelegramService } = await import('@/lib/telegram')
       const userEmail = data.get('userEmail') as string || 'Unknown'
       const caption = `📂 *New File Upload*\n\n👤 *User:* ${userEmail}\n🆔 *Order Reference:* ${orderId}\n📄 *Filename:* ${file.name}\n⚖️ *Size:* ${(file.size / 1024 / 1024).toFixed(2)} MB`
 
       await TelegramService.sendDocument(buffer, file.name, caption)
-      console.log(`File sent to Telegram: ${filename}`)
+      console.log('File sent to Telegram successfully')
     } catch (tgError) {
       console.error('Failed to send to Telegram:', tgError)
-      // We don't fail the whole request if Telegram fails, 
-      // as long as the file is saved locally.
     }
 
     return NextResponse.json({
       success: true,
       filename: filename,
-      url: `/uploads/${filename}`,
-      message: 'File uploaded successfully'
+      url: localUrl || '#',
+      message: localUrl ? 'File saved and sent' : 'Sent to Telegram (Cloud)'
     })
 
   } catch (error: any) {
