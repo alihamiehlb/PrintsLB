@@ -18,6 +18,7 @@ export function Header() {
   const [gameActive, setGameActive] = useState(false)
   const [score, setScore] = useState(0)
   const [highScore, setHighScore] = useState(0)
+  const [globalTop, setGlobalTop] = useState({ score: 0, playerName: 'Anonymous' })
   const [logoPos, setLogoPos] = useState({ x: 0, y: 0 })
 
   const navigation = [
@@ -34,7 +35,21 @@ export function Header() {
   useEffect(() => {
     const saved = localStorage.getItem('logo_game_high_score')
     if (saved) setHighScore(parseInt(saved))
+
+    fetchGlobalTop()
   }, [])
+
+  const fetchGlobalTop = async () => {
+    try {
+      const res = await fetch('/api/game/high-score')
+      const data = await res.json()
+      if (data.score !== undefined) {
+        setGlobalTop({ score: data.score, playerName: data.playerName })
+      }
+    } catch (e) {
+      console.error('Failed to fetch global top score')
+    }
+  }
 
   const getRandomPos = () => {
     if (typeof window === 'undefined') return { x: 0, y: 0 }
@@ -59,19 +74,34 @@ export function Header() {
       setScore(0)
       setLogoPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
       setClickCount(0)
+      fetchGlobalTop() // Refresh on start
     }
 
     // Reset counter if too slow
     setTimeout(() => setClickCount(0), 2000)
   }
 
-  const handleCatch = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleCatch = async (e: React.MouseEvent | React.TouchEvent) => {
     const newScore = score + 1
     setScore(newScore)
 
     if (newScore > highScore) {
       setHighScore(newScore)
       localStorage.setItem('logo_game_high_score', newScore.toString())
+    }
+
+    if (newScore > globalTop.score) {
+      setGlobalTop({ score: newScore, playerName: session?.user?.name || 'You!' })
+      // Sync to DB
+      try {
+        await fetch('/api/game/high-score', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ score: newScore })
+        })
+      } catch (e) {
+        console.error('Failed to sync global score')
+      }
     }
 
     setLogoPos(getRandomPos())
@@ -110,13 +140,18 @@ export function Header() {
                 <span className="text-white font-bold text-xl hidden sm:inline">PrintsLB</span>
                 <AnimatePresence>
                   {gameActive && (
-                    <motion.span
+                    <motion.div
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className="text-[10px] font-bold text-green-400 tracking-tighter uppercase leading-none"
+                      className="flex flex-col"
                     >
-                      Score: {score} | Top: {highScore}
-                    </motion.span>
+                      <span className="text-[10px] font-bold text-green-400 tracking-tighter uppercase leading-none">
+                        Score: {score} | Top: {highScore}
+                      </span>
+                      <span className="text-[8px] font-bold text-blue-400 tracking-tighter uppercase leading-none mt-0.5">
+                        Record: {globalTop.playerName} ({globalTop.score})
+                      </span>
+                    </motion.div>
                   )}
                 </AnimatePresence>
               </div>
@@ -153,7 +188,7 @@ export function Header() {
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
                   onClick={() => setGameActive(false)}
-                  className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[101] bg-white text-gray-900 px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-gray-100 transition-all border-4 border-blue-500 active:scale-95"
+                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[101] bg-white text-gray-900 px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-gray-100 transition-all border-4 border-blue-500 active:scale-95"
                 >
                   EXIT GAME
                 </motion.button>

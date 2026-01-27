@@ -145,3 +145,12 @@ enum PrintJobStatus {
   FAILED
   CANCELLED
 }
+
+model HighScore {
+  id         String   @id @default("global_top")
+  score      Int      @default(0)
+  playerName String   @default("Anonymous")
+  updatedAt  DateTime @updatedAt
+
+  @@map("high_scores")
+}
