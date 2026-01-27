@@ -1,11 +1,36 @@
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
+
+async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 12)
+}
 
 async function main() {
   console.log('Seeding database...')
 
-  // 1. Create default pricing setting
+  // 1. Create admin user
+  const adminEmail = process.env.ADMIN_EMAIL || 'alihamiehlb@gmail.com'
+  const adminPassword = process.env.ADMIN_PASSWORD || 'ali2009'
+  const hashedAdminPassword = await hashPassword(adminPassword)
+
+  const admin = await prisma.user.upsert({
+    where: { email: adminEmail },
+    update: {
+      password: hashedAdminPassword,
+      role: 'ADMIN'
+    },
+    create: {
+      email: adminEmail,
+      name: 'Ali Hamieh',
+      password: hashedAdminPassword,
+      role: 'ADMIN'
+    }
+  })
+  console.log('Admin user ensured:', admin.email)
+
+  // 2. Create default pricing setting
   const pricingSetting = await prisma.pricingSetting.upsert({
     where: { id: 'default' },
     update: {},
@@ -16,9 +41,9 @@ async function main() {
       scaleMultiplier: 1.0
     }
   })
-  console.log('Created pricing setting:', pricingSetting)
+  console.log('Pricing setting ensured:', pricingSetting.id)
 
-  // 2. Create default materials
+  // 3. Create default materials
   const materials = [
     { name: 'PLA', pricePerGram: 0.05, description: 'Easy to print, eco-friendly' },
     { name: 'PETG', pricePerGram: 0.07, description: 'Durable and heat resistant' },
@@ -27,7 +52,6 @@ async function main() {
   ]
 
   for (const material of materials) {
-    // We check for name since color is nullable and part of the unique constraint
     const existing = await prisma.material.findFirst({
       where: { name: material.name }
     })
@@ -52,9 +76,9 @@ async function main() {
       })
     }
   }
-  console.log('Seeded materials')
+  console.log('Materials ensured')
 
-  // 3. Create sample products for the collection
+  // 4. Create sample products for the collection
   const products = [
     {
       name: 'Geometric Planter',
@@ -90,7 +114,7 @@ async function main() {
       })
     }
   }
-  console.log('Seeded products')
+  console.log('Products ensured')
 
   console.log('Seeding complete!')
 }
