@@ -15,6 +15,9 @@ export function Header() {
   const pathname = usePathname()
   const [clickCount, setClickCount] = useState(0)
   const [isZeroG, setIsZeroG] = useState(false)
+  const [gameActive, setGameActive] = useState(false)
+  const [score, setScore] = useState(0)
+  const [logoPos, setLogoPos] = useState({ x: 0, y: 0 })
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -26,19 +29,37 @@ export function Header() {
 
   const isHome = pathname === '/'
 
+  const getRandomPos = () => {
+    // Keep within safe viewport bounds
+    const margin = 100
+    return {
+      x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth - margin * 2 : 500) + margin,
+      y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight - margin * 2 : 500) + margin
+    }
+  }
+
   const handleLogoClick = (e: React.MouseEvent) => {
-    if (isZeroG) return
+    if (gameActive) return
     const newCount = clickCount + 1
     setClickCount(newCount)
 
     if (newCount === 5) {
-      setIsZeroG(true)
+      setGameActive(true)
+      setScore(0)
+      setLogoPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 })
       setClickCount(0)
-      setTimeout(() => setIsZeroG(false), 10000) // Reset after 10s
     }
 
     // Reset counter if too slow
     setTimeout(() => setClickCount(0), 2000)
+  }
+
+  const handleCatch = () => {
+    setScore(s => s + 1)
+    setLogoPos(getRandomPos())
+    // Add a quick feedback effect
+    setIsZeroG(true)
+    setTimeout(() => setIsZeroG(false), 300)
   }
 
   return (
@@ -57,39 +78,65 @@ export function Header() {
             )}
             <div className="flex items-center space-x-2 cursor-pointer group" onClick={handleLogoClick}>
               <motion.div
-                animate={isZeroG ? {
+                animate={(isZeroG || gameActive) ? {
                   rotateY: [0, 360, 720],
-                  y: [0, -20, 0],
-                  scale: [1, 1.2, 1]
+                  y: [0, -5, 0],
+                  scale: [1, 1.1, 1]
                 } : {}}
-                transition={{ duration: 3, repeat: isZeroG ? Infinity : 0 }}
+                transition={{ duration: 3, repeat: (isZeroG || gameActive) ? Infinity : 0 }}
                 className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center relative overflow-hidden"
               >
                 <span className="text-white font-bold text-sm relative z-10">PLB</span>
-                {isZeroG && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 0.5 }}
-                    className="absolute inset-0 bg-white"
-                  />
-                )}
               </motion.div>
               <div className="flex flex-col">
                 <span className="text-white font-bold text-xl hidden sm:inline">PrintsLB</span>
                 <AnimatePresence>
-                  {isZeroG && (
+                  {gameActive && (
                     <motion.span
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 20 }}
-                      className="text-[10px] font-bold text-blue-400 tracking-tighter uppercase leading-none"
+                      className="text-[10px] font-bold text-green-400 tracking-tighter uppercase leading-none"
                     >
-                      Antigravity Engaged
+                      Game Mode: {score} Caught!
                     </motion.span>
                   )}
                 </AnimatePresence>
               </div>
             </div>
+
+            {gameActive && (
+              <AnimatePresence>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    left: logoPos.x,
+                    top: logoPos.y
+                  }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                  className="fixed z-[100] cursor-crosshair"
+                  onClick={handleCatch}
+                >
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+                    className="w-16 h-16 bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600 rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,0.8)] border-2 border-white/20"
+                  >
+                    <span className="text-white font-black text-2xl">PLB</span>
+                  </motion.div>
+                </motion.div>
+
+                <motion.button
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  onClick={() => setGameActive(false)}
+                  className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[101] bg-white text-gray-900 px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-gray-100 transition-all border-4 border-blue-500"
+                >
+                  EXIT GAME
+                </motion.button>
+              </AnimatePresence>
+            )}
           </div>
 
           <div className="hidden md:flex items-center space-x-6">
