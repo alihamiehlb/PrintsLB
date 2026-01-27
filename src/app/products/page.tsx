@@ -245,8 +245,3 @@ Could you please provide more information about this item?`
         </div>
     )
 }
-
-<Footer />
-        </div >
-    )
-}
