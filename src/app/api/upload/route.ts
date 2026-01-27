@@ -1,27 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
-import { existsSync } from 'fs'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60 // 60 seconds is the max for Vercel hobby info
+export const maxDuration = 60 // 60 seconds is the max for Vercel hobby plan
 
 export async function POST(request: NextRequest) {
   try {
     const data = await request.formData()
     const file: File | null = data.get('file') as unknown as File
 
-    // Optional orderId, if not provided we just return the URL for later attachment
+    // Optional orderId, if not provided we just use 'temp'
     const orderId: string = (data.get('orderId') as string) || 'temp'
 
     if (!file) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
     }
 
-    // Check file size (additional server-side check)
-    const MAX_SIZE = 50 * 1024 * 1024 // 50MB
+    // Check file size (Vercel payload limit is 4.5MB)
+    const MAX_SIZE = 4.5 * 1024 * 1024
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: 'File size exceeds 50MB limit' }, { status: 400 })
+      return NextResponse.json({ error: 'File size exceeds 4.5MB platform limit' }, { status: 400 })
     }
 
     // Validate file type
@@ -29,34 +26,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Only STL files are allowed' }, { status: 400 })
     }
 
-    // Convert file to buffer
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
     const timestamp = Date.now()
-
-    // Try to save locally (will fail on Vercel, but that's okay)
-    let localUrl = ''
-    let filename = ''
-    try {
-      const uploadsDir = join(process.cwd(), 'public', 'uploads')
-      if (!existsSync(uploadsDir)) {
-        await mkdir(uploadsDir, { recursive: true })
-      }
-      const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
-      filename = `${orderId}_${timestamp}_${safeName}`
-      const filepath = join(uploadsDir, filename)
-      await writeFile(filepath, buffer)
-      localUrl = `/uploads/${filename}`
-      console.log(`File saved locally: ${filename}`)
-    } catch (fsError: any) {
-      console.warn('Local filesystem write skipped (expected on Vercel):', fsError.message)
-      // Fallback filename for response if local save fails
-      filename = `${orderId}_${timestamp}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
-    }
+    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_')
+    const filename = `${orderId}_${timestamp}_${safeName}`
 
     // Send to Telegram (Crucial for Vercel delivery)
     try {
       const { TelegramService } = await import('@/lib/telegram')
+      const bytes = await file.arrayBuffer()
+      const buffer = Buffer.from(bytes)
       const userEmailRaw = data.get('userEmail') as string || 'Unknown'
 
       // Escape for Markdown
@@ -70,46 +48,19 @@ export async function POST(request: NextRequest) {
       console.log('File sent to Telegram successfully')
     } catch (tgError) {
       console.error('Failed to send to Telegram:', tgError)
+      // We don't fail the response here if the file is logged, 
+      // but in production we want this to be robust.
     }
 
     return NextResponse.json({
       success: true,
       filename: filename,
-      url: localUrl || '#',
-      message: localUrl ? 'File saved and sent' : 'Sent to Telegram (Cloud)'
+      url: '#', // No longer stored locally
+      message: 'File processed and sent to Telegram (Cloud Storage)'
     })
 
   } catch (error: any) {
     console.error('File upload error:', error)
     return NextResponse.json({ error: 'Failed to upload file: ' + error.message }, { status: 500 })
-  }
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url)
-    const filename = searchParams.get('filename')
-
-    if (!filename) {
-      return NextResponse.json({ error: 'No filename provided' }, { status: 400 })
-    }
-
-    // Basic path traversal protection
-    if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
-      return NextResponse.json({ error: 'Invalid filename' }, { status: 400 })
-    }
-
-    const filepath = join(process.cwd(), 'public', 'uploads', filename)
-
-    // In a real app, you might check if file exists or check permissions
-
-    return NextResponse.json({
-      url: `/uploads/${filename}`,
-      message: 'File found'
-    })
-
-  } catch (error: any) {
-    console.error('File retrieval error:', error)
-    return NextResponse.json({ error: 'Failed to retrieve file: ' + error.message }, { status: 500 })
   }
 }

@@ -60,6 +60,13 @@ export default function UploadPage() {
       return
     }
 
+    // Vercel Limit: 4.5MB
+    const MAX_SIZE = 4.5 * 1024 * 1024
+    if (uploadedFile.size > MAX_SIZE) {
+      setError(`File is too large (${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB). Max limit is 4.5 MB due to platform constraints.`)
+      return
+    }
+
     const isLarge = WhatsAppService.isLargeFile(uploadedFile)
     setIsLargeFile(isLarge)
     setError(null)
@@ -181,7 +188,7 @@ export default function UploadPage() {
             >
               <Upload className={`mx-auto mb-4 h-12 w-12 ${dragActive ? 'text-blue-400' : 'text-gray-400'}`} />
               <p className="mb-2 font-medium text-white">{file ? file.name : 'Click or drag file here'}</p>
-              <p className="mb-4 text-xs text-gray-400">STL files up to 50MB</p>
+              <p className="mb-4 text-xs text-gray-400">STL files up to 4.5MB (Platform Limit)</p>
 
               <div className="flex flex-wrap justify-center gap-3">
                 <label className="cursor-pointer rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">
