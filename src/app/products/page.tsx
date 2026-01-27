@@ -124,8 +124,8 @@ Could you please provide more information about this item?`
                                             key={cat}
                                             onClick={() => setSelectedCategory(cat)}
                                             className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border ${selectedCategory === cat
-                                                    ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/40 scale-105'
-                                                    : 'bg-gray-900/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-white'
+                                                ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/40 scale-105'
+                                                : 'bg-gray-900/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-white'
                                                 }`}
                                         >
                                             {cat}
@@ -228,7 +228,7 @@ Could you please provide more information about this item?`
 
                         <motion.div
                             layoutId={`product-${selectedProduct.id}`}
-                            className="relative w-full max-w-4xl bg-gray-900 rounded-[2.5rem] border border-gray-800 overflow-hidden shadow-2xl flex flex-col md:flex-row"
+                            className="relative w-full max-w-4xl bg-gray-900 rounded-3xl md:rounded-[2.5rem] border border-gray-800 overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[95vh] md:max-h-none overflow-y-auto md:overflow-visible"
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
@@ -241,16 +241,19 @@ Could you please provide more information about this item?`
                             </button>
 
                             {/* Image Section */}
-                            <div className="w-full md:w-1/2 h-80 md:h-auto relative">
+                            <div className="w-full md:w-1/2 h-64 sm:h-80 md:h-auto relative shrink-0">
                                 {selectedProduct.imageUrl ? (
-                                    <img
+                                    <motion.img
+                                        initial={{ scale: 1.2, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        transition={{ duration: 0.8 }}
                                         src={selectedProduct.imageUrl}
                                         alt={selectedProduct.name}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
                                     <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                                        <Package className="w-32 h-32 text-gray-700" />
+                                        <Package className="w-20 md:w-32 h-20 md:h-32 text-gray-700" />
                                     </div>
                                 )}
                             </div>
@@ -258,7 +261,12 @@ Could you please provide more information about this item?`
                             {/* Content Section */}
                             <div className="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-between bg-gradient-to-br from-gray-900 to-gray-800">
                                 <div>
-                                    <div className="flex items-center space-x-3 mb-4">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.3 }}
+                                        className="flex items-center space-x-3 mb-4"
+                                    >
                                         <span className="px-4 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full text-xs font-bold uppercase tracking-widest">
                                             {selectedProduct.category || 'Collection'}
                                         </span>
@@ -269,26 +277,45 @@ Could you please provide more information about this item?`
                                         ) : (
                                             <span className="text-xs text-orange-400 font-medium">Made to order</span>
                                         )}
-                                    </div>
+                                    </motion.div>
 
-                                    <h2 className="text-4xl font-extrabold text-white mb-6 leading-tight">
+                                    <motion.h2
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.4 }}
+                                        className="text-3xl md:text-4xl font-extrabold text-white mb-6 leading-tight"
+                                    >
                                         {selectedProduct.name}
-                                    </h2>
+                                    </motion.h2>
 
-                                    <div className="text-3xl font-black text-blue-400 mb-8 flex items-end">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.5 }}
+                                        className="text-3xl font-black text-blue-400 mb-8"
+                                    >
                                         ${selectedProduct.price.toFixed(2)}
-                                        <span className="text-sm font-normal text-gray-500 ml-2 mb-1.5">Free Lebanon Shipping</span>
-                                    </div>
+                                    </motion.div>
 
-                                    <div className="prose prose-invert max-w-none mb-10">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: 0.6 }}
+                                        className="prose prose-invert max-w-none mb-10"
+                                    >
                                         <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Description</h4>
-                                        <p className="text-gray-300 leading-relaxed">
+                                        <p className="text-gray-300 leading-relaxed text-sm md:text-base">
                                             {selectedProduct.description || 'This premium 3D printed model is crafted with precision and high-quality materials. Perfect for collectors, décor, or functional use.'}
                                         </p>
-                                    </div>
+                                    </motion.div>
                                 </div>
 
-                                <div className="space-y-4">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.7 }}
+                                    className="space-y-4"
+                                >
                                     <button
                                         onClick={() => handleWhatsAppInquiry(selectedProduct)}
                                         className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-bold py-5 px-8 rounded-2xl shadow-xl shadow-green-900/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
@@ -300,7 +327,7 @@ Could you please provide more information about this item?`
                                     <p className="text-center text-xs text-gray-500">
                                         Secure payment upon delivery or OMT. Ships within 2-3 business days.
                                     </p>
-                                </div>
+                                </motion.div>
                             </div>
                         </motion.div>
                     </div>
