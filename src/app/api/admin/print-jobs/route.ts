@@ -34,7 +34,8 @@ export async function GET() {
       customerNotes: order.notes || 'No notes provided',
       fileUrl: order.fileUrl || '',
       fileName: order.printJob?.fileName || 'Unknown File',
-      materialName: order.printJob?.material?.name || 'Standard'
+      materialName: order.printJob?.material?.name || 'Standard',
+      phoneNumber: order.phoneNumber || 'N/A'
     }))
 
     return NextResponse.json(printJobs)

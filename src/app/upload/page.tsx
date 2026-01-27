@@ -135,7 +135,7 @@ export default function UploadPage() {
         setOrderId(order.id)
         setOrderPlaced(true)
 
-        // 3. Open WhatsApp
+        // 3. Open WhatsApp (Initiate)
         WhatsAppService.sendOrderViaWhatsApp({
           orderId: order.id,
           fileName: file.name,
@@ -146,8 +146,10 @@ export default function UploadPage() {
           notes: customerNotes,
           fileUrl: `${window.location.origin}${fileUrl}`
         })
+        setWhatsappSent(true)
 
-        setTimeout(() => router.push('/track'), 4000)
+        // Longer delay to allow the popup to occur and user to see success
+        setTimeout(() => router.push('/track'), 8000)
       } else {
         throw new Error('Order creation failed')
       }
@@ -288,11 +290,37 @@ export default function UploadPage() {
                 </div>
                 <h2 className="mb-2 text-3xl font-bold text-white">Order Received!</h2>
                 <p className="mb-6 text-gray-400">Order ID: <span className="font-mono text-blue-400">{orderId}</span></p>
-                <div className="flex flex-col items-center gap-3">
+                <div className="flex flex-col items-center gap-4">
                   <div className="flex items-center text-green-400">
                     <Clock className="w-5 h-5 mr-2 animate-pulse" />
-                    <span>Opening WhatsApp for confirmation...</span>
+                    <span>{whatsappSent ? 'Opening WhatsApp for confirmation...' : 'Preparing confirmation...'}</span>
                   </div>
+
+                  {!whatsappSent && (
+                    <button
+                      onClick={() => file && WhatsAppService.sendOrderViaWhatsApp({
+                        orderId,
+                        fileName: file.name,
+                        material: selectedMaterial?.name || '',
+                        totalPrice: 0,
+                        customerEmail: session?.user?.email || 'N/A',
+                        customerPhone: phoneNumber,
+                        notes: customerNotes,
+                        fileUrl: `/api/upload?filename=${orderId}` // Adjusted fallback
+                      })}
+                      className="inline-flex items-center px-6 py-3 bg-green-600 hover:bg-green-500 text-white rounded-xl font-bold transition-all shadow-lg hover:shadow-green-500/20"
+                    >
+                      <MessageCircle className="w-5 h-5 mr-2" />
+                      Send via WhatsApp Now
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => router.push('/track')}
+                    className="text-gray-400 hover:text-white text-sm underline underline-offset-4"
+                  >
+                    Skip to Tracking
+                  </button>
                 </div>
               </motion.div>
             )}

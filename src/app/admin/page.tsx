@@ -36,6 +36,7 @@ interface PrintJob {
   userName: string
   customerNotes?: string
   fileUrl?: string
+  phoneNumber?: string
 }
 
 interface Product {
@@ -64,7 +65,7 @@ interface User {
 export default function AdminPanel() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<'overview' | 'materials' | 'orders' | 'products' | 'users' | 'analytics' | 'pricing'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'materials' | 'orders' | 'products' | 'users' | 'analytics'>('overview')
 
   // State
   const [materials, setMaterials] = useState<Material[]>([])
@@ -469,13 +470,6 @@ export default function AdminPanel() {
                 <h1 className="text-4xl font-bold text-white">Admin Panel</h1>
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => setActiveTab('pricing')}
-                    className="p-2 text-gray-400 hover:text-white transition-colors"
-                    title="Pricing Settings"
-                  >
-                    <DollarSign className="w-6 h-6" />
-                  </button>
-                  <button
                     onClick={() => router.push('/settings')}
                     className="p-2 text-gray-400 hover:text-white transition-colors"
                     title="General Settings"
@@ -494,8 +488,7 @@ export default function AdminPanel() {
                   { id: 'orders', label: 'Orders', icon: Truck },
                   { id: 'products', label: 'Products', icon: Image },
                   { id: 'users', label: 'Users', icon: Users },
-                  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-                  { id: 'pricing', label: 'Pricing', icon: DollarSign }
+                  { id: 'analytics', label: 'Analytics', icon: BarChart3 }
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -700,6 +693,7 @@ export default function AdminPanel() {
                             <p className="text-gray-400">Customer: {job.userName}</p>
                             <p className="text-gray-400">Material: {job.materialName}</p>
                             <p className="text-gray-400">Order ID: {job.orderId}</p>
+                            <p className="text-blue-400 font-medium">WhatsApp: {job.phoneNumber}</p>
                             {job.customerNotes && (
                               <div className="mt-2 p-2 bg-gray-900 rounded text-sm">
                                 <p className="text-gray-400 font-medium">Notes & Specs:</p>
@@ -905,69 +899,6 @@ export default function AdminPanel() {
                 </div>
               )}
 
-              {/* Pricing Tab */}
-              {activeTab === 'pricing' && (
-                <div className="rounded-2xl border border-gray-800 bg-gray-900/50 p-8 backdrop-blur-sm">
-                  <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-white">Global Pricing Settings</h2>
-                    <div className="flex items-center space-x-2">
-                      <DollarSign className="w-6 h-6 text-yellow-400" />
-                      <span className="text-gray-400">Configure cost multipliers and fees</span>
-                    </div>
-                  </div>
-                  <div className="max-w-md space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">
-                        Tax Rate (%)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={pricingSettings.taxRate}
-                        onChange={(e) => setPricingSettings(prev => ({ ...prev, taxRate: parseFloat(e.target.value) }))}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <p className="mt-1 text-xs text-gray-500">Applied to the total order amount.</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">
-                        Service Fee ($)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={pricingSettings.serviceFee}
-                        onChange={(e) => setPricingSettings(prev => ({ ...prev, serviceFee: parseFloat(e.target.value) }))}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <p className="mt-1 text-xs text-gray-500">Fixed profit added to every print job.</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">
-                        Scale Multiplier
-                      </label>
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={pricingSettings.scaleMultiplier}
-                        onChange={(e) => setPricingSettings(prev => ({ ...prev, scaleMultiplier: parseFloat(e.target.value) }))}
-                        className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <p className="mt-1 text-xs text-gray-500">Global multiplier for material costs.</p>
-                    </div>
-
-                    <button
-                      onClick={handleUpdateSettings}
-                      disabled={isSavingSettings}
-                      className="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold rounded-lg hover:shadow-lg transition-all duration-300 disabled:opacity-50"
-                    >
-                      {isSavingSettings ? 'Saving...' : 'Save Settings'}
-                    </button>
-                  </div>
-                </div>
-              )}
 
               {/* Analytics Tab - NEW */}
               {activeTab === 'analytics' && (
