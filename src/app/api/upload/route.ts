@@ -54,8 +54,14 @@ export async function POST(request: NextRequest) {
     // Send to Telegram (Crucial for Vercel delivery)
     try {
       const { TelegramService } = await import('@/lib/telegram')
-      const userEmail = data.get('userEmail') as string || 'Unknown'
-      const caption = `📂 *New File Upload*\n\n👤 *User:* ${userEmail}\n🆔 *Order Reference:* ${orderId}\n📄 *Filename:* ${file.name}\n⚖️ *Size:* ${(file.size / 1024 / 1024).toFixed(2)} MB`
+      const userEmailRaw = data.get('userEmail') as string || 'Unknown'
+
+      // Escape for Markdown
+      const userEmail = TelegramService.escapeMarkdown(userEmailRaw)
+      const safeOrderId = TelegramService.escapeMarkdown(orderId)
+      const safeFileName = TelegramService.escapeMarkdown(file.name)
+
+      const caption = `📂 *New File Upload*\n\n👤 *User:* ${userEmail}\n🆔 *Order Reference:* ${safeOrderId}\n📄 *Filename:* ${safeFileName}\n⚖️ *Size:* ${(file.size / 1024 / 1024).toFixed(2)} MB`
 
       await TelegramService.sendDocument(buffer, file.name, caption)
       console.log('File sent to Telegram successfully')

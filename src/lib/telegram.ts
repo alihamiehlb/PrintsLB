@@ -38,6 +38,10 @@ export class TelegramService {
         }
     }
 
+    static escapeMarkdown(text: string): string {
+        return text.replace(/[_*[\]()~`>#+-=|{}.!]/g, '\\$&')
+    }
+
     static async sendMessage(text: string): Promise<boolean> {
         const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
         const CHAT_ID = process.env.TELEGRAM_CHAT_ID
