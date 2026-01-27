@@ -1,11 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { ShoppingCart, Package, X, MessageCircle, ArrowRight, CheckCircle2 } from 'lucide-react'
-import { AnimatePresence } from 'framer-motion'
+import { ShoppingCart, Package, X, MessageCircle, ArrowRight, CheckCircle2, Search } from 'lucide-react'
 import { WhatsAppService } from '@/lib/whatsapp'
 
 interface Product {
@@ -23,6 +22,7 @@ export default function ProductsPage() {
     const [products, setProducts] = useState<Product[]>([])
     const [loading, setLoading] = useState(true)
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+    const [searchQuery, setSearchQuery] = useState('')
 
     useEffect(() => {
         fetchProducts()
@@ -41,6 +41,17 @@ export default function ProductsPage() {
             setLoading(false)
         }
     }
+
+    const filteredProducts = products.filter(product => {
+        const query = searchQuery.toLowerCase()
+        return (
+            product.name.toLowerCase().includes(query) ||
+            (product.category?.toLowerCase() || 'general').includes(query) ||
+            (product.description?.toLowerCase() || '').includes(query)
+        )
+    })
+
+    const categories = Array.from(new Set(filteredProducts.map(p => p.category || 'General')))
 
     const handleWhatsAppInquiry = (product: Product) => {
         const message = `👋 Hello! I'm interested in the *${product.name}* from your collection.
@@ -66,7 +77,7 @@ Could you please provide more information about this item?`
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6 }}
                         >
-                            <div className="text-center mb-16">
+                            <div className="text-center mb-12">
                                 <h1 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
                                     Our Collection
                                 </h1>
@@ -75,71 +86,100 @@ Could you please provide more information about this item?`
                                 </p>
                             </div>
 
+                            {/* Search Bar */}
+                            <div className="max-w-md mx-auto mb-16 relative group">
+                                <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                                    <Search className="w-5 h-5 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Search models, categories..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-4 bg-gray-900/40 border border-gray-700 rounded-2xl focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all backdrop-blur-md text-white placeholder-gray-500 shadow-xl"
+                                />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute inset-y-0 right-4 flex items-center text-gray-500 hover:text-white"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                )}
+                            </div>
+
                             {loading ? (
                                 <div className="flex flex-col items-center justify-center py-20">
                                     <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
                                     <p className="text-gray-400 animate-pulse">Loading amazing products...</p>
                                 </div>
-                            ) : products.length === 0 ? (
+                            ) : filteredProducts.length === 0 ? (
                                 <div className="text-center py-20 bg-gray-800/30 rounded-3xl border border-gray-700/50 backdrop-blur-sm">
                                     <Package className="w-20 h-20 text-gray-600 mx-auto mb-6 opacity-50" />
-                                    <h2 className="text-2xl font-bold mb-2">Collection is sparse</h2>
-                                    <p className="text-gray-400">Check back soon for new arrivals!</p>
+                                    <h2 className="text-2xl font-bold mb-2">No products found</h2>
+                                    <p className="text-gray-400">Try adjusting your search criteria</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    {products.map((product) => (
-                                        <motion.div
-                                            key={product.id}
-                                            layoutId={`product-${product.id}`}
-                                            onClick={() => setSelectedProduct(product)}
-                                            initial={{ opacity: 0, scale: 0.95 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            whileHover={{ y: -8, scale: 1.02 }}
-                                            className="group relative bg-gray-900/40 rounded-3xl border border-gray-800 overflow-hidden cursor-pointer hover:border-blue-500/50 hover:bg-gray-800/60 transition-all duration-500 shadow-2xl backdrop-blur-md"
-                                        >
-                                            <div className="aspect-square relative overflow-hidden">
-                                                {product.imageUrl ? (
-                                                    <img
-                                                        src={product.imageUrl}
-                                                        alt={product.name}
-                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                                                        <Package className="w-20 h-20 text-gray-700" />
-                                                    </div>
-                                                )}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-60" />
-
-                                                {product.category && (
-                                                    <div className="absolute top-4 left-4">
-                                                        <span className="px-4 py-1.5 bg-blue-600/90 backdrop-blur-md text-white rounded-full text-xs font-bold tracking-wider uppercase shadow-lg">
-                                                            {product.category}
-                                                        </span>
-                                                    </div>
-                                                )}
+                                <div className="space-y-20">
+                                    {categories.map((category) => (
+                                        <div key={category} className="scroll-mt-32">
+                                            <div className="flex items-center space-x-4 mb-8">
+                                                <h2 className="text-3xl font-bold text-white whitespace-nowrap">
+                                                    {category}
+                                                </h2>
+                                                <div className="h-px w-full bg-gradient-to-r from-blue-500/50 to-transparent" />
                                             </div>
 
-                                            <div className="p-8">
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <h3 className="text-2xl font-bold text-white group-hover:text-blue-400 transition-colors">
-                                                        {product.name}
-                                                    </h3>
-                                                    <div className="text-2xl font-black text-blue-400">
-                                                        ${product.price.toFixed(2)}
-                                                    </div>
-                                                </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                                {filteredProducts
+                                                    .filter(p => (p.category || 'General') === category)
+                                                    .map((product) => (
+                                                        <motion.div
+                                                            key={product.id}
+                                                            layoutId={`product-${product.id}`}
+                                                            onClick={() => setSelectedProduct(product)}
+                                                            initial={{ opacity: 0, scale: 0.95 }}
+                                                            animate={{ opacity: 1, scale: 1 }}
+                                                            whileHover={{ y: -8, scale: 1.02 }}
+                                                            className="group relative bg-gray-900/40 rounded-3xl border border-gray-800 overflow-hidden cursor-pointer hover:border-blue-500/50 hover:bg-gray-800/60 transition-all duration-500 shadow-2xl backdrop-blur-md"
+                                                        >
+                                                            <div className="aspect-square relative overflow-hidden">
+                                                                {product.imageUrl ? (
+                                                                    <img
+                                                                        src={product.imageUrl}
+                                                                        alt={product.name}
+                                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                                    />
+                                                                ) : (
+                                                                    <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                                                                        <Package className="w-20 h-20 text-gray-700" />
+                                                                    </div>
+                                                                )}
+                                                                <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent opacity-60" />
+                                                            </div>
 
-                                                <p className="text-gray-400 text-sm line-clamp-2 mb-6 min-h-[40px]">
-                                                    {product.description || 'No description available for this item.'}
-                                                </p>
+                                                            <div className="p-8">
+                                                                <div className="flex justify-between items-start mb-3">
+                                                                    <h3 className="text-2xl font-bold text-white group-hover:text-blue-400 transition-colors">
+                                                                        {product.name}
+                                                                    </h3>
+                                                                    <div className="text-2xl font-black text-blue-400">
+                                                                        ${product.price.toFixed(2)}
+                                                                    </div>
+                                                                </div>
 
-                                                <div className="flex items-center text-sm font-medium text-blue-400 group-hover:translate-x-2 transition-transform duration-300">
-                                                    View Details <ArrowRight className="ml-2 w-4 h-4" />
-                                                </div>
+                                                                <p className="text-gray-400 text-sm line-clamp-2 mb-6 min-h-[40px]">
+                                                                    {product.description || 'No description available for this item.'}
+                                                                </p>
+
+                                                                <div className="flex items-center text-sm font-medium text-blue-400 group-hover:translate-x-2 transition-transform duration-300">
+                                                                    View Details <ArrowRight className="ml-2 w-4 h-4" />
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    ))}
                                             </div>
-                                        </motion.div>
+                                        </div>
                                     ))}
                                 </div>
                             )}
