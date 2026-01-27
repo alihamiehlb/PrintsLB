@@ -44,7 +44,19 @@ export async function POST(request: NextRequest) {
 
     await writeFile(filepath, buffer)
 
-    console.log(`File saved: ${filename}`)
+    // Send to Telegram
+    try {
+      const { TelegramService } = await import('@/lib/telegram')
+      const userEmail = data.get('userEmail') as string || 'Unknown'
+      const caption = `📂 *New File Upload*\n\n👤 *User:* ${userEmail}\n🆔 *Order Reference:* ${orderId}\n📄 *Filename:* ${file.name}\n⚖️ *Size:* ${(file.size / 1024 / 1024).toFixed(2)} MB`
+
+      await TelegramService.sendDocument(buffer, file.name, caption)
+      console.log(`File sent to Telegram: ${filename}`)
+    } catch (tgError) {
+      console.error('Failed to send to Telegram:', tgError)
+      // We don't fail the whole request if Telegram fails, 
+      // as long as the file is saved locally.
+    }
 
     return NextResponse.json({
       success: true,

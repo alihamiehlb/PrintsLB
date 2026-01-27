@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { Upload, File, DollarSign, Clock, Weight, CheckCircle, CheckCircle2, AlertCircle, Settings, Info, X, Calculator, Package, ArrowRight, MessageCircle, ShoppingBag } from 'lucide-react'
-import { STLAnalyzer } from '@/lib/stl-analyzer'
+import { Upload, File, ShoppingBag, CheckCircle, CheckCircle2, AlertCircle, Settings, Info, X, Package, ArrowRight, MessageCircle, Clock } from 'lucide-react'
 import { WhatsAppService } from '@/lib/whatsapp'
 
 interface Material {
@@ -18,58 +17,31 @@ interface Material {
   available: boolean
 }
 
-interface CostCalculation {
-  materialUsed: number
-  printTime: number
-  baseCost: number
-  profit: number
-  totalPrice: number
-  volume: number
-  infillPercentage: number
-  layerHeight: number
-  materialDensity: number
-  boundingBox: {
-    width: number
-    height: number
-    depth: number
-  }
-  triangleCount: number
-}
-
-interface PrintSettings {
-  infillPercentage: number
-  layerHeight: number
-  printSpeed: number
-  supportEnabled: boolean
-  quality: 'draft' | 'standard' | 'high'
-}
-
 export default function UploadPage() {
   const { data: session } = useSession()
   const router = useRouter()
+
+  // Base state
   const [file, setFile] = useState<File | null>(null)
   const [dragActive, setDragActive] = useState(false)
-  const [isCalculating, setIsCalculating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [calculation, setCalculation] = useState<CostCalculation | null>(null)
   const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null)
-  const [printSettings, setPrintSettings] = useState<PrintSettings>({
-    infillPercentage: 20,
-    layerHeight: 0.2,
-    printSpeed: 50,
-    supportEnabled: false,
-    quality: 'standard'
-  })
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
-  const [isLargeFile, setIsLargeFile] = useState(false)
-  const [whatsappSent, setWhatsappSent] = useState(false)
-  const [customerNotes, setCustomerNotes] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [customerNotes, setCustomerNotes] = useState('')
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [orderId, setOrderId] = useState('')
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const [isLargeFile, setIsLargeFile] = useState(false)
+  const [whatsappSent, setWhatsappSent] = useState(false)
 
-  // Auto-scroll to success message
+  const [materials] = useState<Material[]>([
+    { id: '1', name: 'PLA', color: 'White', pricePerGram: 0.025, available: true },
+    { id: '2', name: 'PLA', color: 'Black', pricePerGram: 0.025, available: true },
+    { id: '3', name: 'PETG', color: 'Transparent', pricePerGram: 0.030, available: true },
+    { id: '4', name: 'TPU', color: 'Black', pricePerGram: 0.045, available: true },
+  ])
+
+  // Auto-scroll to success
   useEffect(() => {
     if (orderPlaced) {
       const element = document.getElementById('success-message')
@@ -79,163 +51,34 @@ export default function UploadPage() {
     }
   }, [orderPlaced])
 
-  const [materials, setMaterials] = useState<Material[]>([
-    { id: '1', name: 'PLA', color: 'White', pricePerGram: 0.025, available: true },
-    { id: '2', name: 'PLA', color: 'Black', pricePerGram: 0.025, available: true },
-    { id: '3', name: 'PETG', color: 'Transparent', pricePerGram: 0.030, available: true },
-    { id: '4', name: 'TPU', color: 'Black', pricePerGram: 0.045, available: true },
-  ])
-
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files || files.length === 0) return
-
     const uploadedFile = files[0]
 
-    // Check if file is STL
     if (!uploadedFile.name.toLowerCase().endsWith('.stl')) {
       setError('Please upload an STL file')
       return
     }
 
-    // Check file size
     const isLarge = WhatsAppService.isLargeFile(uploadedFile)
     setIsLargeFile(isLarge)
-
-    if (isLarge) {
-      setError(`File is too large (${WhatsAppService.formatFileSize(uploadedFile.size)}). Maximum size is 50MB. You'll be redirected to WhatsApp for large file handling.`)
-    } else {
-      setError(null)
-    }
-
+    setError(null)
     setFile(uploadedFile)
-    setCalculation(null)
     setWhatsappSent(false)
   }, [])
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
-    }
+    setDragActive(e.type === 'dragenter' || e.type === 'dragover')
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFiles(e.dataTransfer.files)
-    }
+    if (e.dataTransfer.files?.[0]) handleFiles(e.dataTransfer.files)
   }, [handleFiles])
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleFiles(e.target.files)
-  }
-
-  const calculateCost = async () => {
-    if (!file || !selectedMaterial) return
-
-    setIsCalculating(true)
-    setError(null)
-
-    try {
-      // Fetch pricing config from admin settings
-      let pricingConfig = {
-        sizeMultiplier: 1.0,
-        taxPercentage: 0.0,
-        baseFee: 0.0
-      }
-
-      try {
-        const configResponse = await fetch('/api/pricing-config')
-        if (configResponse.ok) {
-          const config = await configResponse.json()
-          if (config) {
-            pricingConfig = config
-          }
-        }
-      } catch (err) {
-        console.log('Using default pricing config')
-      }
-
-      // Use accurate STL analysis
-      const analysis = await STLAnalyzer.analyzeFile(file)
-
-      // Material densities (g/cm³)
-      const materialDensities = {
-        'PLA': 1.24,
-        'PETG': 1.27,
-        'TPU': 1.20
-      }
-
-      const materialDensity = materialDensities[selectedMaterial.name as keyof typeof materialDensities] || 1.24
-
-      // Calculate material usage with advanced settings
-      const usage = STLAnalyzer.calculateMaterialUsage(
-        analysis,
-        printSettings.infillPercentage,
-        printSettings.layerHeight,
-        materialDensity
-      )
-
-      // Calculate bounding box dimensions
-      const boundingBox = {
-        width: Math.abs(analysis.boundingBox.max.x - analysis.boundingBox.min.x),
-        height: Math.abs(analysis.boundingBox.max.y - analysis.boundingBox.min.y),
-        depth: Math.abs(analysis.boundingBox.max.z - analysis.boundingBox.min.z)
-      }
-
-      // Calculate size factor (volume-based multiplier)
-      const volume = boundingBox.width * boundingBox.height * boundingBox.depth
-      const sizeFactor = Math.max(1.0, Math.min(2.0, 1.0 + (volume / 100000) * pricingConfig.sizeMultiplier))
-
-      // Quality multiplier for pricing
-      const qualityMultipliers = {
-        'draft': 0.8,
-        'standard': 1.0,
-        'high': 1.3
-      }
-
-      const qualityMultiplier = qualityMultipliers[printSettings.quality]
-
-      // Support material estimation (10% extra if enabled)
-      const supportMultiplier = printSettings.supportEnabled ? 1.1 : 1.0
-
-      // Final calculations with size factor
-      const adjustedWeight = usage.weight * supportMultiplier * qualityMultiplier
-      const baseCost = adjustedWeight * selectedMaterial.pricePerGram * sizeFactor
-      const profit = 2.50
-      const subtotal = baseCost + profit + pricingConfig.baseFee
-      const tax = subtotal * (pricingConfig.taxPercentage / 100)
-      const totalPrice = subtotal + tax
-
-      // Advanced print time calculation
-      const adjustedPrintTime = usage.printTime * qualityMultiplier * (printSettings.supportEnabled ? 1.2 : 1.0)
-
-      setCalculation({
-        materialUsed: adjustedWeight,
-        printTime: adjustedPrintTime,
-        baseCost: Math.round(baseCost * 100) / 100,
-        profit: profit,
-        totalPrice: Math.round(totalPrice * 100) / 100,
-        volume: usage.volume,
-        infillPercentage: printSettings.infillPercentage,
-        layerHeight: printSettings.layerHeight,
-        materialDensity: materialDensity,
-        boundingBox,
-        triangleCount: analysis.triangleCount
-      })
-    } catch (error) {
-      console.error('STL Analysis Error:', error)
-      setError('Failed to analyze STL file. Please ensure it\'s a valid STL file.')
-    } finally {
-      setIsCalculating(false)
-    }
-  }
 
   const handleOrder = async () => {
     if (!session) {
@@ -243,15 +86,8 @@ export default function UploadPage() {
       return
     }
 
-    if (isLargeFile && file) {
-      // Send WhatsApp notification for large file
-      WhatsAppService.sendLargeFileNotification(file, session.user.email || undefined, customerNotes)
-      setWhatsappSent(true)
-      return
-    }
-
-    if (!file || !selectedMaterial || !calculation || !phoneNumber) {
-      setError('Please complete all required fields, including phone number.')
+    if (!file || !selectedMaterial || !phoneNumber) {
+      setError('Please complete all fields (File, Material, and Phone)')
       return
     }
 
@@ -259,743 +95,204 @@ export default function UploadPage() {
     setError(null)
 
     try {
-      // 1. Upload file first
+      // 1. Upload file (sends to Telegram)
       const formData = new FormData()
       formData.append('file', file)
-      // We don't have an orderId yet, but the API handles it (optional or temp)
+      formData.append('userEmail', session.user.email || 'N/A')
 
       const uploadResponse = await fetch('/api/upload', {
         method: 'POST',
         body: formData
       })
 
-      if (!uploadResponse.ok) {
-        throw new Error('File upload failed')
-      }
+      if (!uploadResponse.ok) throw new Error('Upload failed')
+      const { url: fileUrl } = await uploadResponse.json()
 
-      const uploadResult = await uploadResponse.json()
-      const fileUrl = uploadResult.url
-
-      // 2. Create Order with fileUrl
-      const orderData = {
-        fileName: file.name,
-        fileSize: file.size,
-        materialName: selectedMaterial.name,
-        materialPrice: selectedMaterial.pricePerGram,
-        totalPrice: calculation.totalPrice,
-        customerNotes,
-        phoneNumber,
-        printSettings,
-        materialUsed: calculation.materialUsed,
-        fileUrl: fileUrl
-      }
-
+      // 2. Create DB Order
       const response = await fetch('/api/orders', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(orderData)
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: file.name,
+          fileSize: file.size,
+          materialName: selectedMaterial.name,
+          totalPrice: 0, // Manual pricing later
+          customerNotes,
+          phoneNumber,
+          fileUrl
+        })
       })
 
       if (response.ok) {
-        const result = await response.json()
-        setOrderId(result.order.id)
+        const { order } = await response.json()
+        setOrderId(order.id)
         setOrderPlaced(true)
-        setIsPlacingOrder(false)
 
-        // Generate full file URL for WhatsApp
-        const fullFileUrl = `${window.location.origin}${fileUrl}`
-
-        // Trigger WhatsApp redirection
+        // 3. Open WhatsApp
         WhatsAppService.sendOrderViaWhatsApp({
-          orderId: result.order.id,
+          orderId: order.id,
           fileName: file.name,
           material: selectedMaterial.name,
-          totalPrice: calculation.totalPrice,
+          totalPrice: 0,
           customerEmail: session.user.email || 'N/A',
           customerPhone: phoneNumber,
           notes: customerNotes,
-          fileUrl: fullFileUrl
+          fileUrl: `${window.location.origin}${fileUrl}`
         })
 
-        // Redirect after delay (longer delay to allow user to see success and WhatsApp trigger)
-        setTimeout(() => {
-          router.push('/track')
-        }, 3000)
-
-        // Reset form
-        setFile(null)
-        setCalculation(null)
-        setSelectedMaterial(null)
-        setCustomerNotes('')
-        setPhoneNumber('')
+        setTimeout(() => router.push('/track'), 4000)
       } else {
-        const errData = await response.json()
-        setError(errData.error || 'Failed to place order. Please try again.')
+        throw new Error('Order creation failed')
       }
-    } catch (error: any) {
-      console.error('Order placement error:', error)
-      setError('An error occurred while placing your order: ' + error.message)
+    } catch (err: any) {
+      setError(err.message || 'Something went wrong')
     } finally {
       setIsPlacingOrder(false)
     }
-  }
-
-  const sendToWhatsApp = () => {
-    if (!file) return
-
-    WhatsAppService.sendLargeFileNotification(file, session?.user?.email || undefined)
-    setWhatsappSent(true)
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-cyan-900/20">
       <Header />
 
-      <div className="px-4 py-8 md:px-12 md:py-12">
+      <main className="px-4 py-8 md:px-12 md:py-12">
         <motion.div
-          className="mx-auto max-w-4xl"
+          className="mx-auto max-w-3xl"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
         >
           <h1 className="mb-8 text-center text-3xl font-bold text-white md:text-5xl">
-            Upload Your <span className="text-gradient">STL File</span>
+            Place Your <span className="text-gradient">3D Print Order</span>
           </h1>
 
-          {/* File Upload Area */}
-          <motion.div
-            className={`mb-8 rounded-2xl border-2 border-dashed p-12 text-center transition-all duration-300 ${dragActive
-              ? 'border-blue-500 bg-blue-500/10'
-              : 'border-gray-600 bg-gray-900/50'
-              }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            whileHover={{ scale: 1.02 }}
-          >
-            <Upload className={`mx-auto mb-4 h-16 w-16 ${dragActive ? 'text-blue-400' : 'text-gray-400'}`} />
-            <p className="mb-2 text-lg font-semibold text-white">
-              {file ? file.name : 'Choose an STL file to get started'}
-            </p>
-            <p className="mb-4 text-gray-400 text-sm">
-              Maximum file size: 50MB. Drag & drop available on desktop.
-            </p>
-            <input
-              type="file"
-              accept=".stl"
-              onChange={handleFileChange}
-              className="hidden"
-              id="file-upload"
-            />
-            <label
-              htmlFor="file-upload"
-              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 px-6 py-4 font-semibold text-white cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 w-full sm:w-auto"
+          {/* Step 1: File Upload */}
+          <section className="mb-8">
+            <h2 className="mb-4 text-xl font-semibold text-white flex items-center">
+              <span className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mr-3 text-sm">1</span>
+              Upload STL File
+            </h2>
+            <div
+              className={`rounded-2xl border-2 border-dashed p-10 text-center transition-all ${dragActive ? 'border-blue-500 bg-blue-500/10' : 'border-gray-700 bg-gray-900/50'
+                }`}
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
             >
-              <Upload className="mr-2 h-5 w-5" />
-              Choose File
-            </label>
+              <Upload className={`mx-auto mb-4 h-12 w-12 ${dragActive ? 'text-blue-400' : 'text-gray-400'}`} />
+              <p className="mb-2 font-medium text-white">{file ? file.name : 'Click or drag file here'}</p>
+              <p className="mb-4 text-xs text-gray-400">STL files up to 50MB</p>
 
-            {file && (
-              <button
-                onClick={() => {
-                  setFile(null)
-                  setCalculation(null)
-                }}
-                className="mt-4 sm:mt-0 sm:ml-4 inline-flex items-center justify-center rounded-lg border border-red-500 bg-red-500/20 px-6 py-4 font-semibold text-red-400 hover:bg-red-500/30 transition-all duration-300 w-full sm:w-auto"
-              >
-                <X className="mr-2 h-5 w-5" />
-                Remove
-              </button>
-            )}
-          </motion.div>
-
-          {error && (
-            <motion.div
-              className="mb-6 rounded-lg border border-red-500 bg-red-500/10 p-4"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="flex items-center">
-                <AlertCircle className="mr-2 h-5 w-5 text-red-400" />
-                <span className="text-red-400">{error}</span>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Large File WhatsApp Section */}
-          {file && isLargeFile && (
-            <motion.div
-              className="mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="rounded-2xl border border-orange-500/50 bg-gradient-to-r from-orange-500/10 to-red-500/10 p-6">
-                <div className="flex items-center mb-4">
-                  <MessageCircle className="w-6 h-6 text-orange-400 mr-3" />
-                  <h2 className="text-2xl font-semibold text-white">Large File Detected</h2>
-                </div>
-
-                <div className="mb-6">
-                  <p className="text-gray-300 mb-2">
-                    Your file ({WhatsAppService.formatFileSize(file.size)}) exceeds the 50MB limit for automatic processing.
-                  </p>
-                  <p className="text-gray-300">
-                    Click the button below to send your file details directly to our WhatsApp for manual processing and custom pricing.
-                  </p>
-                </div>
-
-                <div className="bg-gray-800/50 rounded-lg p-4 mb-6">
-                  <h3 className="font-semibold text-white mb-2">File Information:</h3>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-400">Name:</span>
-                      <p className="text-white font-medium">{file.name}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Size:</span>
-                      <p className="text-white font-medium">{WhatsAppService.formatFileSize(file.size)}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Type:</span>
-                      <p className="text-white font-medium">{file.type || 'STL File'}</p>
-                    </div>
-                    <div>
-                      <span className="text-gray-400">Status:</span>
-                      <p className="text-orange-400 font-medium">Requires Manual Processing</p>
-                    </div>
-                  </div>
-                </div>
-
-                {!whatsappSent ? (
-                  <button
-                    onClick={sendToWhatsApp}
-                    className="w-full flex items-center justify-center rounded-lg bg-gradient-to-r from-green-500 to-green-600 px-6 py-4 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                  >
-                    <MessageCircle className="mr-2 h-5 w-5" />
-                    Send to WhatsApp
-                    <ArrowRight className="ml-2 h-5 w-5" />
+              <div className="flex flex-wrap justify-center gap-3">
+                <label className="cursor-pointer rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">
+                  <input type="file" accept=".stl" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
+                  {file ? 'Change File' : 'Select File'}
+                </label>
+                {file && (
+                  <button onClick={() => setFile(null)} className="rounded-lg border border-red-500/50 px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10">
+                    <X className="w-4 h-4" />
                   </button>
-                ) : (
-                  <div className="w-full rounded-lg border border-green-500 bg-green-500/10 p-4 text-center">
-                    <CheckCircle className="w-8 h-8 text-green-400 mx-auto mb-2" />
-                    <p className="text-green-400 font-semibold">WhatsApp Opened!</p>
-                    <p className="text-green-300 text-sm mt-1">
-                      Your file details have been sent. We'll contact you soon with custom pricing.
-                    </p>
-                  </div>
                 )}
               </div>
-            </motion.div>
-          )}
+            </div>
+          </section>
 
-          {/* Material Selection - Only for small files */}
-          {file && !isLargeFile && (
-            <motion.div
-              className="mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <h2 className="mb-4 text-2xl font-semibold text-white">Select Material</h2>
-              <div className="grid gap-4 md:grid-cols-2">
-                {materials.map((material) => (
-                  <motion.div
-                    key={material.id}
-                    className={`rounded-lg border p-4 cursor-pointer transition-all duration-300 ${selectedMaterial?.id === material.id
-                      ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-gray-700 bg-gray-900/50 hover:border-gray-600'
+          {/* Step 2: Material */}
+          {file && (
+            <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
+              <h2 className="mb-4 text-xl font-semibold text-white flex items-center">
+                <span className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mr-3 text-sm">2</span>
+                Choose Material
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {materials.map(m => (
+                  <button
+                    key={m.id}
+                    onClick={() => setSelectedMaterial(m)}
+                    className={`p-4 rounded-xl border text-left transition-all ${selectedMaterial?.id === m.id ? 'border-blue-500 bg-blue-500/10' : 'border-gray-800 bg-gray-800/40 hover:border-gray-700'
                       }`}
-                    onClick={() => material.available && setSelectedMaterial(material)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-white">
-                          {material.name} {material.color && `(${material.color})`}
-                        </h3>
-                        <p className="text-sm text-gray-400">
-                          ${material.pricePerGram.toFixed(3)}/gram
-                        </p>
-                      </div>
-                      <div className={`px-3 py-1 rounded-full text-xs font-medium ${material.available
-                        ? 'bg-green-500/20 text-green-400'
-                        : 'bg-red-500/20 text-red-400'
-                        }`}>
-                        {material.available ? 'Available' : 'Unavailable'}
-                      </div>
-                    </div>
-                  </motion.div>
+                    <p className="font-bold text-white">{m.name} <span className="text-xs font-normal text-gray-400">({m.color})</span></p>
+                    <p className="text-xs text-blue-400">Standard Pricing</p>
+                  </button>
                 ))}
               </div>
-            </motion.div>
+            </motion.section>
           )}
 
-          {/* Advanced Print Settings */}
+          {/* Step 3: Details */}
           {file && selectedMaterial && (
-            <motion.div
-              className="mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold text-white">Print Settings</h2>
-                <button
-                  onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-                  className="flex items-center space-x-2 text-blue-400 hover:text-blue-300 transition-colors"
-                >
-                  <Settings className="w-4 h-4" />
-                  <span>{showAdvancedSettings ? 'Simple' : 'Advanced'}</span>
-                </button>
-              </div>
-
-              <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-6">
-                <div className="grid gap-6 md:grid-cols-2">
-                  {/* Quality Preset */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Print Quality
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {(['draft', 'standard', 'high'] as const).map((quality) => (
-                        <button
-                          key={quality}
-                          onClick={() => setPrintSettings(prev => ({ ...prev, quality }))}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${printSettings.quality === quality
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                            }`}
-                        >
-                          {quality.charAt(0).toUpperCase() + quality.slice(1)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Infill Percentage */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-400 mb-2">
-                      Infill: {printSettings.infillPercentage}%
-                    </label>
-                    <input
-                      type="range"
-                      min="5"
-                      max="100"
-                      step="5"
-                      value={printSettings.infillPercentage}
-                      onChange={(e) => setPrintSettings(prev => ({
-                        ...prev,
-                        infillPercentage: parseInt(e.target.value)
-                      }))}
-                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>5%</span>
-                      <span>100%</span>
-                    </div>
-                  </div>
-
-                  {showAdvancedSettings && (
-                    <>
-                      {/* Layer Height */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">
-                          Layer Height: {printSettings.layerHeight}mm
-                        </label>
-                        <input
-                          type="range"
-                          min="0.1"
-                          max="0.3"
-                          step="0.05"
-                          value={printSettings.layerHeight}
-                          onChange={(e) => setPrintSettings(prev => ({
-                            ...prev,
-                            layerHeight: parseFloat(e.target.value)
-                          }))}
-                          className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
-                          <span>0.1mm (Fine)</span>
-                          <span>0.3mm (Fast)</span>
-                        </div>
-                      </div>
-
-                      {/* Print Speed */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">
-                          Print Speed: {printSettings.printSpeed}mm/s
-                        </label>
-                        <input
-                          type="range"
-                          min="20"
-                          max="100"
-                          step="10"
-                          value={printSettings.printSpeed}
-                          onChange={(e) => setPrintSettings(prev => ({
-                            ...prev,
-                            printSpeed: parseInt(e.target.value)
-                          }))}
-                          className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
-                          <span>20mm/s</span>
-                          <span>100mm/s</span>
-                        </div>
-                      </div>
-
-                      {/* Support */}
-                      <div className="md:col-span-2">
-                        <label className="flex items-center space-x-3 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={printSettings.supportEnabled}
-                            onChange={(e) => setPrintSettings(prev => ({
-                              ...prev,
-                              supportEnabled: e.target.checked
-                            }))}
-                            className="w-4 h-4 text-blue-500 bg-gray-800 border-gray-600 rounded focus:ring-blue-500"
-                          />
-                          <span className="text-sm text-gray-400">
-                            Enable Support Material (+10% material cost)
-                          </span>
-                        </label>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Settings Info */}
-                <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <div className="flex items-start space-x-2">
-                    <Info className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
-                    <div className="text-sm text-blue-300">
-                      <p className="font-medium mb-1">How these settings affect pricing:</p>
-                      <ul className="text-xs space-y-1 text-blue-200">
-                        <li>• Higher quality = 30% more material and time</li>
-                        <li>• More infill = more material usage</li>
-                        <li>• Thinner layers = longer print time</li>
-                        <li>• Support material adds 10% to material cost</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Customer Notes & Phone Section */}
-          {file && (
-            <motion.div
-              className="mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <h2 className="mb-4 text-2xl font-semibold text-white">Order Details</h2>
-              <div className="rounded-lg border border-gray-800 bg-gray-900/50 p-6 space-y-4">
+            <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
+              <h2 className="mb-4 text-xl font-semibold text-white flex items-center">
+                <span className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mr-3 text-sm">3</span>
+                Your Details
+              </h2>
+              <div className="space-y-4 rounded-2xl bg-gray-900/50 p-6 border border-gray-800">
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Phone Number <span className="text-red-400">*</span>
-                  </label>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">WhatsApp Number</label>
                   <input
                     type="tel"
-                    required
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    placeholder="+961 70 123 456"
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    className="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-white focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g. +961 70 123 456"
                   />
-                  <p className="mt-2 text-xs text-gray-500">
-                    We'll contact you here for order confirmation.
-                  </p>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-400 mb-2">
-                    Customer Notes (Optional)
-                  </label>
+                  <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Notes (Optional)</label>
                   <textarea
                     value={customerNotes}
-                    onChange={(e) => setCustomerNotes(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                    rows={4}
-                    placeholder="Add any special instructions, requirements, or notes about your print job..."
+                    onChange={e => setCustomerNotes(e.target.value)}
+                    className="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-white h-24"
+                    placeholder="Infill, resolution, or special requests..."
                   />
                 </div>
               </div>
-            </motion.div>
+            </motion.section>
           )}
 
-          {/* Calculate Button */}
+          {/* Action */}
+          {error && <p className="mb-4 text-sm text-red-500 bg-red-500/10 p-3 rounded-lg flex items-center"><AlertCircle className="w-4 h-4 mr-2" /> {error}</p>}
+
           {file && selectedMaterial && (
-            <motion.div
-              className="mb-8 text-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+            <button
+              onClick={handleOrder}
+              disabled={isPlacingOrder || !phoneNumber}
+              className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 py-4 font-bold text-white shadow-lg hover:shadow-cyan-500/20 disabled:opacity-50 transition-all active:scale-[0.98]"
             >
-              <button
-                onClick={calculateCost}
-                disabled={isCalculating}
-                className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 px-8 py-4 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              {isPlacingOrder ? 'Processing...' : 'Place Order & Send via WhatsApp'}
+            </button>
+          )}
+
+          {/* Success UI */}
+          <AnimatePresence>
+            {orderPlaced && (
+              <motion.div
+                id="success-message"
+                className="mt-8 rounded-3xl bg-gray-900/90 border-2 border-green-500/50 p-8 text-center backdrop-blur-md"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
               >
-                {isCalculating ? (
-                  <>
-                    <Clock className="mr-2 h-5 w-5 animate-spin" />
-                    Calculating...
-                  </>
-                ) : (
-                  <>
-                    <Calculator className="mr-2 h-5 w-5" />
-                    Calculate Cost
-                  </>
-                )}
-              </button>
-            </motion.div>
-          )}
-
-          {/* Cost Calculation Results */}
-          {calculation && (
-            <motion.div
-              className="rounded-2xl border border-gray-800 bg-gray-900/50 p-8 backdrop-blur-sm"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-            >
-              <h2 className="mb-6 text-2xl font-semibold text-white">📊 Detailed Cost Analysis</h2>
-
-              {/* STL File Analysis */}
-              <div className="mb-6 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
-                <h3 className="text-lg font-medium text-white mb-3 flex items-center">
-                  <Calculator className="w-5 h-5 mr-2 text-blue-400" />
-                  STL File Analysis
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-400">Volume:</span>
-                    <p className="text-white font-medium">{calculation.volume.toFixed(1)} cm³</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Triangles:</span>
-                    <p className="text-white font-medium">{calculation.triangleCount.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Dimensions:</span>
-                    <p className="text-white font-medium">
-                      {calculation.boundingBox.width.toFixed(0)}×{calculation.boundingBox.height.toFixed(0)}×{calculation.boundingBox.depth.toFixed(0)}mm
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Material Density:</span>
-                    <p className="text-white font-medium">{calculation.materialDensity} g/cm³</p>
+                <div className="relative mx-auto mb-6 h-20 w-20">
+                  <div className="absolute inset-0 animate-ping rounded-full bg-green-500/20"></div>
+                  <div className="relative flex h-full w-full items-center justify-center rounded-full bg-green-500">
+                    <CheckCircle2 className="h-10 w-10 text-white" />
                   </div>
                 </div>
-              </div>
-
-              {/* Print Settings Applied */}
-              <div className="mb-6 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
-                <h3 className="text-lg font-medium text-white mb-3 flex items-center">
-                  <Settings className="w-5 h-5 mr-2 text-purple-400" />
-                  Print Settings Applied
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <span className="text-gray-400">Quality:</span>
-                    <p className="text-white font-medium capitalize">{printSettings.quality}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Infill:</span>
-                    <p className="text-white font-medium">{calculation.infillPercentage}%</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Layer Height:</span>
-                    <p className="text-white font-medium">{calculation.layerHeight}mm</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-400">Support:</span>
-                    <p className="text-white font-medium">{printSettings.supportEnabled ? 'Enabled' : 'Disabled'}</p>
+                <h2 className="mb-2 text-3xl font-bold text-white">Order Received!</h2>
+                <p className="mb-6 text-gray-400">Order ID: <span className="font-mono text-blue-400">{orderId}</span></p>
+                <div className="flex flex-col items-center gap-3">
+                  <div className="flex items-center text-green-400">
+                    <Clock className="w-5 h-5 mr-2 animate-pulse" />
+                    <span>Opening WhatsApp for confirmation...</span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-              {/* Cost Breakdown */}
-              <div className="grid gap-4 md:grid-cols-2 mb-6">
-                <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Weight className="w-4 h-4 mr-2 text-blue-400" />
-                      <span className="text-gray-400">Material Used</span>
-                    </div>
-                    <span className="font-semibold text-white">{calculation.materialUsed.toFixed(1)}g</span>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-2 text-green-400" />
-                      <span className="text-gray-400">Print Time</span>
-                    </div>
-                    <span className="font-semibold text-white">{Math.round(calculation.printTime)} min</span>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <DollarSign className="w-4 h-4 mr-2 text-yellow-400" />
-                      <span className="text-gray-400">Material Cost</span>
-                    </div>
-                    <span className="font-semibold text-white">${calculation.baseCost.toFixed(2)}</span>
-                  </div>
-                </div>
-
-                <div className="rounded-lg border border-gray-700 bg-gray-800/50 p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <CheckCircle className="w-4 h-4 mr-2 text-purple-400" />
-                      <span className="text-gray-400">Service Fee</span>
-                    </div>
-                    <span className="font-semibold text-white">${calculation.profit.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Total Price */}
-              <div className="mb-6 rounded-lg border-2 border-blue-500 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-4 md:p-6">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div className="text-center md:text-left">
-                    <span className="text-xl font-semibold text-white">Total Estimated Price</span>
-                    <p className="text-sm text-gray-400 mt-1">Includes material cost + $2.50 service fee</p>
-                  </div>
-                  <div className="flex flex-col items-center md:items-end">
-                    <span className="text-4xl font-bold text-gradient">${calculation.totalPrice.toFixed(2)}</span>
-                    <span className="text-xs text-blue-400 font-medium">USD</span>
-                  </div>
-                </div>
-
-                {/* Pricing Disclaimer */}
-                <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-start space-x-2">
-                  <Info className="w-4 h-4 text-amber-400 mt-1 flex-shrink-0" />
-                  <p className="text-xs text-amber-200/80 leading-relaxed italic">
-                    <span className="font-bold">Important:</span> This is only an estimated price. The final total may increase or decrease after our team reviews your file for printability and final material usage.
-                  </p>
-                </div>
-              </div>
-
-              {/* Cost Per Hour */}
-              <div className="mb-6 rounded-lg border border-gray-700 bg-gray-800/50 p-4">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-400">Effective Cost per Hour:</span>
-                  <span className="font-medium text-white">
-                    ${((calculation.totalPrice / calculation.printTime) * 60).toFixed(2)}/hour
-                  </span>
-                </div>
-              </div>
-
-              <div className="mt-6 text-center">
-                <button
-                  onClick={handleOrder}
-                  disabled={isPlacingOrder}
-                  className="w-full md:w-auto inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 px-8 py-4 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isPlacingOrder ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      Placing Order...
-                    </>
-                  ) : orderPlaced ? (
-                    <>
-                      <CheckCircle className="mr-2 h-5 w-5" />
-                      Success! Redirecting...
-                    </>
-                  ) : (
-                    <>
-                      <Package className="mr-2 h-5 w-5" />
-                      Place Order
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </>
-                  )}
-                </button>
-
-                {!session && (
-                  <p className="mt-2 text-sm text-gray-400">
-                    You'll need to sign in to place your order
-                  </p>
-                )}
-              </div>
-
-              {/* Order Success Message */}
-              {orderPlaced && orderId && (
-                <motion.div
-                  id="success-message"
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  className="mt-12 rounded-[2.5rem] border-2 border-green-500 bg-gradient-to-br from-green-500/10 via-emerald-500/5 to-gray-900 p-8 md:p-12 shadow-2xl shadow-green-900/20"
-                >
-                  <div className="text-center">
-                    <div className="relative inline-block mb-6">
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 200, damping: 10 }}
-                      >
-                        <CheckCircle2 className="w-20 h-20 text-green-400" />
-                      </motion.div>
-                      <motion.div
-                        className="absolute inset-0 rounded-full bg-green-400/20"
-                        animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                    </div>
-
-                    <h3 className="text-3xl md:text-4xl font-black text-white mb-4">Order Received!</h3>
-
-                    <div className="max-w-md mx-auto bg-gray-950/50 rounded-2xl p-6 border border-gray-800 mb-8">
-                      <p className="text-gray-400 text-sm mb-2 uppercase tracking-widest font-bold">Order ID</p>
-                      <p className="text-2xl md:text-3xl font-mono font-black text-green-400 tracking-wider font-mono uppercase">{orderId}</p>
-                    </div>
-
-                    <div className="space-y-4 mb-10">
-                      <p className="text-xl text-green-300 font-semibold flex items-center justify-center">
-                        <MessageCircle className="w-6 h-6 mr-2" />
-                        Redirecting to WhatsApp...
-                      </p>
-                      <p className="text-gray-400 text-sm max-w-sm mx-auto">
-                        We've opened a WhatsApp chat with your order details and file link. Please send the message to confirm your print!
-                      </p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                      <button
-                        onClick={() => router.push(`/track?order=${orderId}`)}
-                        className="px-8 py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all duration-300 shadow-lg shadow-blue-900/20 hover:scale-105 active:scale-95 flex items-center justify-center"
-                      >
-                        <Package className="w-5 h-5 mr-2" /> Track My Print
-                      </button>
-                      <button
-                        onClick={() => {
-                          setOrderPlaced(false)
-                          setOrderId('')
-                          setFile(null)
-                        }}
-                        className="px-8 py-4 bg-gray-800 hover:bg-gray-700 text-white font-bold rounded-2xl transition-all duration-300 border border-gray-700 hover:scale-105 active:scale-95"
-                      >
-                        Place Another Order
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </motion.div>
-          )}
         </motion.div>
-      </div>
+      </main>
 
       <Footer />
     </div>
