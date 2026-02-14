@@ -109,7 +109,7 @@ export default function FAQPage() {
                             <h2 className="text-3xl font-bold text-white mb-4">Still have questions?</h2>
                             <p className="text-gray-300 mb-8">Can't find the answer you're looking for? Reach out to our human support team directly.</p>
                             <a
-                                href="https://wa.me/96181165516"
+                                href="https://wa.me/96176696385"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center rounded-xl bg-white px-10 py-4 font-bold text-gray-900 shadow-lg transition-all duration-300 hover:scale-105"

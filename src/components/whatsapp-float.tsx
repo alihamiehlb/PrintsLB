@@ -26,7 +26,7 @@ export function WhatsAppFloat() {
         }
     }, [])
 
-    const phoneNumber = '96181165516' // From lib/whatsapp.ts
+    const phoneNumber = '96176696385' // From lib/whatsapp.ts
     const message = encodeURIComponent("Hello PrintsLB! I have a question about my 3D printing order.")
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`
 
