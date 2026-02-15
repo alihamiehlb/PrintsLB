@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { WhatsAppFloat } from "@/components/whatsapp-float";
+import { GoogleAnalytics } from "@/components/google-analytics";
+import { Suspense } from "react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -54,6 +56,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased bg-gray-900 text-white`}>
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <Suspense fallback={null}>
+            <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+          </Suspense>
+        )}
         <Providers>
           {children}
           <WhatsAppFloat />
