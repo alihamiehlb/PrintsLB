@@ -10,21 +10,21 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'PrintsLB - Professional 3D Printing Service',
-  description: 'Upload your STL files and get instant pricing for high-quality 3D prints in Lebanon.',
+  title: "Prints LB | 3D Printing Services in Lebanon",
+  description: "Professional 3D printing services in Lebanon. Fast delivery and high-quality prints.",
   keywords: ['3D printing', 'STL files', '3D models', 'rapid prototyping', 'custom printing', 'Lebanon'],
   authors: [{ name: 'PrintsLB' }],
   creator: 'PrintsLB',
   publisher: 'PrintsLB',
-  metadataBase: new URL(process.env.NEXTAUTH_URL || 'http://localhost:3000'),
+  metadataBase: new URL('https://printslb.com'),
   icons: {
     icon: '/logo.png',
     shortcut: '/logo.png',
     apple: '/logo.png',
   },
   openGraph: {
-    title: 'PrintsLB - Professional 3D Printing Services',
-    description: 'High-quality 3D printing services by Ali Hamieh. Fast turnaround, competitive pricing, and expert craftsmanship.',
+    title: "Prints LB | 3D Printing Services in Lebanon",
+    description: "Professional 3D printing services in Lebanon. Fast delivery and high-quality prints.",
     url: '/',
     siteName: 'PrintsLB',
     images: [
@@ -40,8 +40,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'PrintsLB - Professional 3D Printing Services',
-    description: 'High-quality 3D printing services by Ali Hamieh. Fast turnaround, competitive pricing, and expert craftsmanship.',
+    title: "Prints LB | 3D Printing Services in Lebanon",
+    description: "Professional 3D printing services in Lebanon. Fast delivery and high-quality prints.",
     images: ['/logo.png'],
   },
 };
