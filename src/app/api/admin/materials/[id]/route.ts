@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth-options'
 import { prisma } from '@/lib/prisma'
 
 export async function PUT(
@@ -15,7 +15,14 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const data = await request.json()
+    const data = await request.json() as {
+      name: string
+      description?: string
+      color?: string
+      pricePerGram: string | number
+      available: boolean
+      printerType: string
+    }
 
     const material = await prisma.material.update({
       where: { id },
@@ -23,7 +30,7 @@ export async function PUT(
         name: data.name,
         description: data.description,
         color: data.color,
-        pricePerGram: parseFloat(data.pricePerGram),
+        pricePerGram: Number(data.pricePerGram),
         available: data.available,
         printerType: data.printerType
       }

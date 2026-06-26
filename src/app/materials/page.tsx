@@ -18,7 +18,7 @@ const materials = [
             { name: 'Detail Accuracy', value: 5 }
         ],
         bestFor: ['Decorative models', 'Prototypes', 'Low-stress parts', 'Figures'],
-        color: 'from-blue-500 to-cyan-500',
+        color: 'from-zinc-300 to-white',
         icon: Shield
     },
     {
@@ -32,7 +32,7 @@ const materials = [
             { name: 'Detail Accuracy', value: 4 }
         ],
         bestFor: ['Mechanical parts', 'Outdoor use', 'Water-tight containers', 'Hooks/brackets'],
-        color: 'from-purple-500 to-pink-500',
+        color: 'from-zinc-500 to-zinc-300',
         icon: Zap
     },
     {
@@ -46,14 +46,14 @@ const materials = [
             { name: 'Detail Accuracy', value: 3 }
         ],
         bestFor: ['Phone cases', 'Tires/wheels', 'Grommets', 'Shock absorbers'],
-        color: 'from-green-500 to-emerald-500',
+        color: 'from-zinc-400 to-zinc-200',
         icon: Droplets
     }
 ]
 
 export default function MaterialGuide() {
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-black">
             <Header />
 
             <main className="pt-24 pb-20">
@@ -63,8 +63,8 @@ export default function MaterialGuide() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center mb-16"
                     >
-                        <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">Material <span className="text-gradient">Guide</span></h1>
-                        <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+                        <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">Material <span className="text-gradient-bw">Guide</span></h1>
+                        <p className="text-xl text-zinc-400 max-w-3xl mx-auto">
                             Not sure which plastic to choose? We use high-quality filaments for every job.
                             Compare the properties and choose the right one for your model.
                         </p>
@@ -78,17 +78,17 @@ export default function MaterialGuide() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
-                                className="group relative rounded-3xl border border-gray-800 bg-gray-900/50 p-8 backdrop-blur-sm overflow-hidden"
+                                className="group relative rounded-3xl border border-zinc-800 bg-zinc-900/50 p-8 backdrop-blur-sm overflow-hidden"
                             >
                                 <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${mat.color} opacity-10 blur-3xl transition-opacity group-hover:opacity-20`}></div>
 
                                 <div className={`mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-r ${mat.color}`}>
-                                    <mat.icon className="h-8 w-8 text-white" />
+                                    <mat.icon className="h-8 w-8 text-black" />
                                 </div>
 
                                 <h3 className="text-2xl font-bold text-white mb-2">{mat.name}</h3>
                                 <p className={`text-sm font-semibold mb-4 bg-gradient-to-r ${mat.color} bg-clip-text text-transparent`}>{mat.tagline}</p>
-                                <p className="text-gray-400 mb-8 leading-relaxed">
+                                <p className="text-zinc-400 mb-8 leading-relaxed">
                                     {mat.description}
                                 </p>
 
@@ -180,12 +180,12 @@ export default function MaterialGuide() {
                         viewport={{ once: true }}
                         className="mt-20 text-center"
                     >
-                        <div className="bg-blue-900/20 border border-blue-500/50 rounded-3xl p-12 inline-block max-w-4xl">
+                        <div className="bg-zinc-900/40 border border-zinc-700 rounded-3xl p-12 inline-block max-w-4xl">
                             <h2 className="text-3xl font-bold text-white mb-4">Ready to choose your material?</h2>
                             <p className="text-gray-300 mb-8">Upload your STL and select your preferred material in the next step.</p>
                             <Link
                                 href="/upload"
-                                className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 px-10 py-4 font-bold text-white shadow-lg hover:shadow-blue-500/20 transition-all duration-300 hover:scale-105"
+                                className="inline-flex items-center justify-center rounded-xl bg-white px-10 py-4 font-bold text-black shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] transition-all duration-300 hover:scale-105"
                             >
                                 Start Printing Now
                                 <ArrowRight className="ml-2 h-5 w-5" />

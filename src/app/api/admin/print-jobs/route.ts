@@ -1,6 +1,8 @@
+import { OrderStatus } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth-options'
+import { parseJsonBody } from '@/lib/json'
 import { prisma } from '@/lib/prisma'
 
 export async function GET() {
@@ -53,7 +55,12 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { id, status, baseCost, totalPrice } = await request.json()
+    const { id, status, baseCost, totalPrice } = await parseJsonBody<{
+      id: string
+      status?: string
+      baseCost?: string | number
+      totalPrice?: string | number
+    }>(request)
 
     // Find the order first to get printJobId
     const existingOrder = await prisma.order.findUnique({
@@ -67,8 +74,8 @@ export async function PUT(request: NextRequest) {
 
     // Update PrintJob if costs are provided
     if (existingOrder.printJobId && (baseCost !== undefined || totalPrice !== undefined)) {
-      const newBaseCost = baseCost !== undefined ? parseFloat(baseCost) : existingOrder.printJob?.baseCost || 0
-      const newTotalPrice = totalPrice !== undefined ? parseFloat(totalPrice) : existingOrder.totalAmount || 0
+      const newBaseCost = baseCost !== undefined ? Number(baseCost) : existingOrder.printJob?.baseCost || 0
+      const newTotalPrice = totalPrice !== undefined ? Number(totalPrice) : existingOrder.totalAmount || 0
       const newProfit = newTotalPrice - newBaseCost
 
       await prisma.printJob.update({
@@ -85,8 +92,8 @@ export async function PUT(request: NextRequest) {
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
-        status: status || existingOrder.status,
-        totalAmount: totalPrice !== undefined ? parseFloat(totalPrice) : existingOrder.totalAmount,
+        status: (status as OrderStatus) || existingOrder.status,
+        totalAmount: totalPrice !== undefined ? Number(totalPrice) : existingOrder.totalAmount,
         tracking: status ? {
           create: {
             status: status,

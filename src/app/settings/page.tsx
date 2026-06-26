@@ -26,7 +26,7 @@ export default function SettingsPage() {
     }, [session])
 
     if (status === 'loading') {
-        return <div className="min-h-screen bg-gray-900 flex items-center justify-center text-white">Loading...</div>
+        return <div className="min-h-screen bg-black flex items-center justify-center text-white">Loading...</div>
     }
 
     if (!session) {
@@ -46,7 +46,7 @@ export default function SettingsPage() {
             if (res.ok) {
                 setMessage({ type: 'success', text: 'Profile updated successfully!' })
             } else {
-                const data = await res.json()
+                const data = await res.json() as { error?: string }
                 setMessage({ type: 'error', text: data.error || 'Failed to update profile' })
             }
         } catch (err) {
@@ -72,7 +72,7 @@ export default function SettingsPage() {
                 setNewPassword('')
                 setCurrentPassword('')
             } else {
-                const data = await res.json()
+                const data = await res.json() as { error?: string }
                 setMessage({ type: 'error', text: data.error || 'Failed to update password' })
             }
         } catch (err) {
@@ -84,7 +84,7 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-cyan-900/20">
+        <div className="min-h-screen bg-black">
             <Header />
 
             <main className="pt-16">
@@ -103,7 +103,7 @@ export default function SettingsPage() {
                                 <button
                                     onClick={() => setActiveTab('profile')}
                                     className={`flex-1 px-6 py-4 text-left ${activeTab === 'profile'
-                                        ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500'
+                                        ? 'bg-white/10 text-white border-b-2 border-white'
                                         : 'text-gray-400 hover:text-white transition-all'
                                         }`}
                                 >
@@ -113,7 +113,7 @@ export default function SettingsPage() {
                                 <button
                                     onClick={() => setActiveTab('notifications')}
                                     className={`flex-1 px-6 py-4 text-left ${activeTab === 'notifications'
-                                        ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500'
+                                        ? 'bg-white/10 text-white border-b-2 border-white'
                                         : 'text-gray-400 hover:text-white transition-all'
                                         }`}
                                 >
@@ -123,7 +123,7 @@ export default function SettingsPage() {
                                 <button
                                     onClick={() => setActiveTab('privacy')}
                                     className={`flex-1 px-6 py-4 text-left ${activeTab === 'privacy'
-                                        ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500'
+                                        ? 'bg-white/10 text-white border-b-2 border-white'
                                         : 'text-gray-400 hover:text-white transition-all'
                                         }`}
                                 >
@@ -156,7 +156,7 @@ export default function SettingsPage() {
                                         <button
                                             onClick={handleUpdateProfile}
                                             disabled={loading}
-                                            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-all font-semibold"
+                                            className="px-6 py-3 bg-white text-black rounded-lg hover:bg-zinc-200 disabled:opacity-50 transition-all font-semibold"
                                         >
                                             {loading ? 'Saving...' : 'Save Changes'}
                                         </button>
@@ -204,7 +204,7 @@ export default function SettingsPage() {
                                                 <button
                                                     onClick={handleUpdatePassword}
                                                     disabled={loading || !newPassword}
-                                                    className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-all font-semibold"
+                                                    className="px-6 py-3 bg-white text-black rounded-lg hover:bg-zinc-200 disabled:opacity-50 transition-all font-semibold"
                                                 >
                                                     {loading ? 'Updating...' : 'Update Password'}
                                                 </button>

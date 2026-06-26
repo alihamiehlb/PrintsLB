@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ShoppingCart, Package, X, MessageCircle, ArrowRight, CheckCircle2, Search } from 'lucide-react'
+import { ProductCardSkeleton } from '@/components/ui/skeleton'
+import { OptimizedImage } from '@/components/ui/optimized-image'
 import { WhatsAppService } from '@/lib/whatsapp'
 
 interface Product {
@@ -13,6 +15,7 @@ interface Product {
     description?: string
     price: number
     imageUrl?: string
+    webpUrl?: string
     category?: string
     inStock: boolean
     stockCount: number
@@ -33,7 +36,7 @@ export default function ProductsPage() {
         try {
             const response = await fetch('/api/admin/products')
             if (response.ok) {
-                const data = await response.json()
+                const data = await response.json() as Product[]
                 setProducts(data.filter((p: Product) => p.inStock))
             }
         } catch (error) {
@@ -74,7 +77,7 @@ Could you please provide more information about this item?`
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-cyan-900/20 text-white">
+        <div className="min-h-screen bg-black text-white">
             <Header />
 
             <main className="pt-24 pb-20">
@@ -86,7 +89,7 @@ Could you please provide more information about this item?`
                             transition={{ duration: 0.6 }}
                         >
                             <div className="text-center mb-12">
-                                <h1 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-cyan-300">
+                                <h1 className="text-5xl font-extrabold mb-4 text-gradient-bw">
                                     Our Collection
                                 </h1>
                                 <p className="text-xl text-gray-400 max-w-2xl mx-auto">
@@ -97,14 +100,14 @@ Could you please provide more information about this item?`
                             {/* Search Bar */}
                             <div className="max-w-md mx-auto mb-16 relative group">
                                 <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                                    <Search className="w-5 h-5 text-gray-400 group-focus-within:text-blue-400 transition-colors" />
+                                    <Search className="w-5 h-5 text-gray-400 group-focus-within:text-white transition-colors" />
                                 </div>
                                 <input
                                     type="text"
                                     placeholder="Search models, categories..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-4 bg-gray-900/40 border border-gray-700 rounded-2xl focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/10 transition-all backdrop-blur-md text-white placeholder-gray-500 shadow-xl"
+                                    className="w-full pl-12 pr-4 py-4 bg-zinc-900/40 border border-zinc-700 rounded-2xl focus:outline-none focus:border-white/50 focus:ring-2 focus:ring-white/10 transition-all backdrop-blur-md text-white placeholder-zinc-500 shadow-xl"
                                 />
                                 {searchQuery && (
                                     <button
@@ -124,7 +127,7 @@ Could you please provide more information about this item?`
                                             key={cat}
                                             onClick={() => setSelectedCategory(cat)}
                                             className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 border ${selectedCategory === cat
-                                                ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/40 scale-105'
+                                                ? 'bg-white border-white text-black shadow-lg shadow-white/20 scale-105'
                                                 : 'bg-gray-900/40 border-gray-700 text-gray-400 hover:border-gray-500 hover:text-white'
                                                 }`}
                                         >
@@ -135,9 +138,10 @@ Could you please provide more information about this item?`
                             )}
 
                             {loading ? (
-                                <div className="flex flex-col items-center justify-center py-20">
-                                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                                    <p className="text-gray-400 animate-pulse">Loading amazing products...</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                    {Array.from({ length: 6 }).map((_, i) => (
+                                        <ProductCardSkeleton key={i} />
+                                    ))}
                                 </div>
                             ) : filteredProducts.length === 0 ? (
                                 <div className="text-center py-20 bg-gray-800/30 rounded-3xl border border-gray-700/50 backdrop-blur-sm">
@@ -153,7 +157,7 @@ Could you please provide more information about this item?`
                                                 <h2 className="text-3xl font-bold text-white whitespace-nowrap">
                                                     {category}
                                                 </h2>
-                                                <div className="h-px w-full bg-gradient-to-r from-blue-500/50 to-transparent" />
+                                                <div className="h-px w-full bg-gradient-to-r from-white/40 to-transparent" />
                                             </div>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -167,14 +171,16 @@ Could you please provide more information about this item?`
                                                             initial={{ opacity: 0, scale: 0.95 }}
                                                             animate={{ opacity: 1, scale: 1 }}
                                                             whileHover={{ y: -8, scale: 1.02 }}
-                                                            className="group relative bg-gray-900/40 rounded-3xl border border-gray-800 overflow-hidden cursor-pointer hover:border-blue-500/50 hover:bg-gray-800/60 transition-all duration-500 shadow-2xl backdrop-blur-md"
+                                                            className="group relative bg-zinc-900/40 rounded-3xl border border-zinc-800 overflow-hidden cursor-pointer hover:border-white/50 hover:bg-zinc-800/60 transition-all duration-500 shadow-2xl backdrop-blur-md"
                                                         >
                                                             <div className="aspect-square relative overflow-hidden">
-                                                                {product.imageUrl ? (
-                                                                    <img
-                                                                        src={product.imageUrl}
+                                                                {product.imageUrl || product.webpUrl ? (
+                                                                    <OptimizedImage
+                                                                        src={product.imageUrl || product.webpUrl || ''}
+                                                                        webpSrc={product.webpUrl}
                                                                         alt={product.name}
-                                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                                        fill
+                                                                        className="transition-transform duration-700 group-hover:scale-110"
                                                                     />
                                                                 ) : (
                                                                     <div className="w-full h-full bg-gray-800 flex items-center justify-center">
@@ -186,10 +192,10 @@ Could you please provide more information about this item?`
 
                                                             <div className="p-8">
                                                                 <div className="flex justify-between items-start mb-3">
-                                                                    <h3 className="text-2xl font-bold text-white group-hover:text-blue-400 transition-colors">
+                                                                    <h3 className="text-2xl font-bold text-white group-hover:text-zinc-300 transition-colors">
                                                                         {product.name}
                                                                     </h3>
-                                                                    <div className="text-2xl font-black text-blue-400">
+                                                                    <div className="text-2xl font-black text-white">
                                                                         ${product.price.toFixed(2)}
                                                                     </div>
                                                                 </div>
@@ -198,7 +204,7 @@ Could you please provide more information about this item?`
                                                                     {product.description || 'No description available for this item.'}
                                                                 </p>
 
-                                                                <div className="flex items-center text-sm font-medium text-blue-400 group-hover:translate-x-2 transition-transform duration-300">
+                                                                <div className="flex items-center text-sm font-medium text-white group-hover:translate-x-2 transition-transform duration-300">
                                                                     View Details <ArrowRight className="ml-2 w-4 h-4" />
                                                                 </div>
                                                             </div>
@@ -259,7 +265,7 @@ Could you please provide more information about this item?`
                             </div>
 
                             {/* Content Section */}
-                            <div className="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-between bg-gradient-to-br from-gray-900 to-gray-800">
+                            <div className="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-between bg-gradient-to-br from-zinc-950 to-black">
                                 <div>
                                     <motion.div
                                         initial={{ opacity: 0, y: 10 }}
@@ -267,7 +273,7 @@ Could you please provide more information about this item?`
                                         transition={{ delay: 0.3 }}
                                         className="flex items-center space-x-3 mb-4"
                                     >
-                                        <span className="px-4 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full text-xs font-bold uppercase tracking-widest">
+                                        <span className="px-4 py-1 bg-white/10 border border-white/20 text-white rounded-full text-xs font-bold uppercase tracking-widest">
                                             {selectedProduct.category || 'Collection'}
                                         </span>
                                         {selectedProduct.stockCount > 0 ? (
@@ -292,7 +298,7 @@ Could you please provide more information about this item?`
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: 0.5 }}
-                                        className="text-3xl font-black text-blue-400 mb-8"
+                                        className="text-3xl font-black text-white mb-8"
                                     >
                                         ${selectedProduct.price.toFixed(2)}
                                     </motion.div>

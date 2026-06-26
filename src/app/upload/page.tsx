@@ -113,7 +113,7 @@ export default function UploadPage() {
       })
 
       if (!uploadResponse.ok) throw new Error('Upload failed')
-      const { url: fileUrl } = await uploadResponse.json()
+      const { url: fileUrl } = await uploadResponse.json() as { url: string }
 
       // 2. Create DB Order
       const response = await fetch('/api/orders', {
@@ -131,7 +131,7 @@ export default function UploadPage() {
       })
 
       if (response.ok) {
-        const { order } = await response.json()
+        const { order } = await response.json() as { order: { id: string } }
         setOrderId(order.id)
         setOrderPlaced(true)
 
@@ -161,7 +161,7 @@ export default function UploadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-cyan-900/20">
+    <div className="min-h-screen bg-black">
       <Header />
 
       <main className="px-4 py-8 md:px-12 md:py-12">
@@ -177,23 +177,23 @@ export default function UploadPage() {
           {/* Step 1: File Upload */}
           <section className="mb-8">
             <h2 className="mb-4 text-xl font-semibold text-white flex items-center">
-              <span className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mr-3 text-sm">1</span>
+              <span className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center mr-3 text-sm font-bold">1</span>
               Upload STL File
             </h2>
             <div
-              className={`rounded-2xl border-2 border-dashed p-10 text-center transition-all ${dragActive ? 'border-blue-500 bg-blue-500/10' : 'border-gray-700 bg-gray-900/50'
+              className={`rounded-2xl border-2 border-dashed p-10 text-center transition-all ${dragActive ? 'border-white bg-white/10' : 'border-zinc-700 bg-zinc-900/50'
                 }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
               onDrop={handleDrop}
             >
-              <Upload className={`mx-auto mb-4 h-12 w-12 ${dragActive ? 'text-blue-400' : 'text-gray-400'}`} />
+              <Upload className={`mx-auto mb-4 h-12 w-12 ${dragActive ? 'text-white' : 'text-gray-400'}`} />
               <p className="mb-2 font-medium text-white">{file ? file.name : 'Click or drag file here'}</p>
               <p className="mb-4 text-xs text-gray-400">STL files up to 4.5MB (Platform Limit)</p>
 
               <div className="flex flex-wrap justify-center gap-3">
-                <label className="cursor-pointer rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-blue-500">
+                <label className="cursor-pointer rounded-lg bg-white px-6 py-2.5 text-sm font-semibold text-black hover:bg-zinc-200 transition-colors">
                   <input type="file" accept=".stl" className="hidden" onChange={(e) => handleFiles(e.target.files)} />
                   {file ? 'Change File' : 'Select File'}
                 </label>
@@ -210,7 +210,7 @@ export default function UploadPage() {
           {file && (
             <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
               <h2 className="mb-4 text-xl font-semibold text-white flex items-center">
-                <span className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mr-3 text-sm">2</span>
+                <span className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center mr-3 text-sm font-bold">2</span>
                 Choose Material
               </h2>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -218,11 +218,11 @@ export default function UploadPage() {
                   <button
                     key={m.id}
                     onClick={() => setSelectedMaterial(m)}
-                    className={`p-4 rounded-xl border text-left transition-all ${selectedMaterial?.id === m.id ? 'border-blue-500 bg-blue-500/10' : 'border-gray-800 bg-gray-800/40 hover:border-gray-700'
+                    className={`p-4 rounded-xl border text-left transition-all ${selectedMaterial?.id === m.id ? 'border-white bg-white/10' : 'border-zinc-800 bg-zinc-800/40 hover:border-zinc-600'
                       }`}
                   >
                     <p className="font-bold text-white">{m.name} <span className="text-xs font-normal text-gray-400">({m.color})</span></p>
-                    <p className="text-xs text-blue-400">Standard Pricing</p>
+                    <p className="text-xs text-zinc-400">Standard Pricing</p>
                   </button>
                 ))}
               </div>
@@ -233,7 +233,7 @@ export default function UploadPage() {
           {file && selectedMaterial && (
             <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-8">
               <h2 className="mb-4 text-xl font-semibold text-white flex items-center">
-                <span className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center mr-3 text-sm">3</span>
+                <span className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center mr-3 text-sm font-bold">3</span>
                 Your Details
               </h2>
               <div className="space-y-4 rounded-2xl bg-gray-900/50 p-6 border border-gray-800">
@@ -243,7 +243,7 @@ export default function UploadPage() {
                     type="tel"
                     value={phoneNumber}
                     onChange={e => setPhoneNumber(e.target.value)}
-                    className="w-full rounded-lg bg-gray-800 border border-gray-700 p-3 text-white focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-lg bg-zinc-800 border border-zinc-700 p-3 text-white focus:ring-2 focus:ring-white/40 focus:outline-none"
                     placeholder="e.g. +961 70 123 456"
                   />
                 </div>
@@ -267,7 +267,7 @@ export default function UploadPage() {
             <button
               onClick={handleOrder}
               disabled={isPlacingOrder || !phoneNumber}
-              className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 py-4 font-bold text-white shadow-lg hover:shadow-cyan-500/20 disabled:opacity-50 transition-all active:scale-[0.98]"
+              className="w-full rounded-xl bg-white py-4 font-bold text-black shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] disabled:opacity-50 transition-all active:scale-[0.98]"
             >
               {isPlacingOrder ? 'Processing...' : 'Place Order & Send via WhatsApp'}
             </button>
@@ -289,7 +289,7 @@ export default function UploadPage() {
                   </div>
                 </div>
                 <h2 className="mb-2 text-3xl font-bold text-white">Order Received!</h2>
-                <p className="mb-6 text-gray-400">Order ID: <span className="font-mono text-blue-400">{orderId}</span></p>
+                <p className="mb-6 text-gray-400">Order ID: <span className="font-mono text-white">{orderId}</span></p>
                 <div className="flex flex-col items-center gap-4">
                   <div className="flex items-center text-green-400">
                     <Clock className="w-5 h-5 mr-2 animate-pulse" />

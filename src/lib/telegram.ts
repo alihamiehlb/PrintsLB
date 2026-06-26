@@ -1,3 +1,5 @@
+type TelegramResponse = { ok: boolean; description?: string }
+
 export class TelegramService {
     static async sendDocument(file: Buffer, fileName: string, caption: string): Promise<boolean> {
         const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
@@ -24,7 +26,7 @@ export class TelegramService {
                 body: formData
             })
 
-            const result = await response.json()
+            const result = await response.json() as TelegramResponse
             if (!result.ok) {
                 console.error('Telegram API error response:', JSON.stringify(result, null, 2))
                 return false
@@ -59,7 +61,7 @@ export class TelegramService {
                 })
             })
 
-            const result = await response.json()
+            const result = await response.json() as TelegramResponse
             return result.ok
         } catch (error) {
             console.error('Failed to send Telegram message:', error)

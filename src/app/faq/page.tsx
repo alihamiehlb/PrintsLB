@@ -40,10 +40,10 @@ function FAQItem({ question, answer, isOpen, onClick }: { question: string, answ
                 onClick={onClick}
                 className="w-full py-6 flex items-center justify-between text-left group"
             >
-                <span className={`text-xl font-semibold transition-colors ${isOpen ? 'text-blue-400' : 'text-white group-hover:text-gray-300'}`}>
+                <span className={`text-xl font-semibold transition-colors ${isOpen ? 'text-white' : 'text-zinc-300 group-hover:text-white'}`}>
                     {question}
                 </span>
-                <ChevronDown className={`w-6 h-6 text-gray-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-blue-400' : ''}`} />
+                <ChevronDown className={`w-6 h-6 text-zinc-500 transition-transform duration-300 ${isOpen ? 'rotate-180 text-white' : ''}`} />
             </button>
             <AnimatePresence>
                 {isOpen && (
@@ -68,7 +68,7 @@ export default function FAQPage() {
     const [openIndex, setOpenIndex] = useState<number | null>(0)
 
     return (
-        <div className="min-h-screen bg-gray-900">
+        <div className="min-h-screen bg-black">
             <Header />
 
             <main className="pt-24 pb-20">
@@ -78,8 +78,8 @@ export default function FAQPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center mb-16"
                     >
-                        <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-500/10 mb-6">
-                            <HelpCircle className="h-10 w-10 text-blue-400" />
+                        <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10 mb-6">
+                            <HelpCircle className="h-10 w-10 text-white" />
                         </div>
                         <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">Frequently Asked <span className="text-gradient">Questions</span></h1>
                         <p className="text-xl text-gray-400">
@@ -105,7 +105,7 @@ export default function FAQPage() {
                         viewport={{ once: true }}
                         className="text-center"
                     >
-                        <div className="p-12 rounded-3xl border border-gray-800 bg-gradient-to-br from-gray-900/90 to-blue-900/90 backdrop-blur-sm">
+                        <div className="p-12 rounded-3xl border border-zinc-800 bg-zinc-950 backdrop-blur-sm">
                             <h2 className="text-3xl font-bold text-white mb-4">Still have questions?</h2>
                             <p className="text-gray-300 mb-8">Can't find the answer you're looking for? Reach out to our human support team directly.</p>
                             <a

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth-options'
+import { parseJsonBody } from '@/lib/json'
 import { prisma } from '@/lib/prisma'
 
 export async function GET() {
@@ -34,21 +35,25 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const data = await request.json()
+        const data = await parseJsonBody<{
+            taxRate: string | number
+            serviceFee: string | number
+            scaleMultiplier: string | number
+        }>(request)
         const { taxRate, serviceFee, scaleMultiplier } = data
 
         const settings = await prisma.pricingSetting.upsert({
             where: { id: 'default' },
             update: {
-                taxRate: parseFloat(taxRate),
-                serviceFee: parseFloat(serviceFee),
-                scaleMultiplier: parseFloat(scaleMultiplier)
+                taxRate: Number(taxRate),
+                serviceFee: Number(serviceFee),
+                scaleMultiplier: Number(scaleMultiplier)
             },
             create: {
                 id: 'default',
-                taxRate: parseFloat(taxRate),
-                serviceFee: parseFloat(serviceFee),
-                scaleMultiplier: parseFloat(scaleMultiplier)
+                taxRate: Number(taxRate),
+                serviceFee: Number(serviceFee),
+                scaleMultiplier: Number(scaleMultiplier)
             }
         })
 

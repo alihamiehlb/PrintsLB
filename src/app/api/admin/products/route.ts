@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth-options'
+import { parseJsonBody } from '@/lib/json'
 import { prisma } from '@/lib/prisma'
 
 // GET all products
@@ -25,17 +26,25 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const data = await request.json()
+        const data = await parseJsonBody<{
+            name: string
+            description?: string
+            price: string | number
+            imageUrl?: string
+            category?: string
+            inStock?: boolean
+            stockCount?: string | number
+        }>(request)
 
         const product = await prisma.product.create({
             data: {
                 name: data.name,
                 description: data.description,
-                price: parseFloat(data.price),
+                price: Number(data.price),
                 imageUrl: data.imageUrl,
                 category: data.category,
                 inStock: data.inStock ?? true,
-                stockCount: parseInt(data.stockCount) || 0
+                stockCount: Number(data.stockCount) || 0
             }
         })
 
@@ -54,15 +63,24 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const data = await request.json()
+        const data = await parseJsonBody<{
+            id: string
+            name?: string
+            description?: string
+            price?: string | number
+            imageUrl?: string
+            category?: string
+            inStock?: boolean
+            stockCount?: string | number
+        }>(request)
         const { id, ...updateData } = data
 
         const product = await prisma.product.update({
             where: { id },
             data: {
                 ...updateData,
-                price: updateData.price ? parseFloat(updateData.price) : undefined,
-                stockCount: updateData.stockCount ? parseInt(updateData.stockCount) : undefined
+                price: updateData.price ? Number(updateData.price) : undefined,
+                stockCount: updateData.stockCount ? Number(updateData.stockCount) : undefined
             }
         })
 

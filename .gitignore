@@ -10,6 +10,13 @@ node_modules/
 /.next/
 /out/
 
+# OpenNext / Cloudflare build output
+/.open-next/
+/.wrangler/
+
+# Local test asset (copied into public/hero-video.mp4 for the hero)
+/video-printslb-test.mp4
+
 # Production
 /build
 
@@ -39,4 +46,12 @@ next-env.d.ts
 
 # Uploads
 /public/uploads/*
+*.db
+*.db-journal
 !/public/uploads/.gitkeep
+
+# Real exported production data
+/prisma/d1-data.sql
+
+# Debug log from wrangler tail
+tail.log

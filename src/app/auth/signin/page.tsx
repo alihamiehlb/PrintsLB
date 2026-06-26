@@ -8,7 +8,8 @@ import Link from 'next/link'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { AuthGuard } from '@/components/auth-guard'
-import { Eye, EyeOff, AlertCircle } from 'lucide-react'
+import { GoogleSignInButton, AuthDivider } from '@/components/google-sign-in-button'
+import { CtaButton } from '@/components/ui/cta-button'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
@@ -26,15 +27,15 @@ export default function SignIn() {
       const result = await signIn('credentials', {
         email,
         password,
-        redirect: false
+        redirect: false,
       })
 
       if (result?.error) {
-        setError('Invalid credentials')
+        setError('Invalid email or password')
       } else {
         router.push('/dashboard')
       }
-    } catch (error) {
+    } catch {
       setError('An error occurred. Please try again.')
     } finally {
       setLoading(false)
@@ -43,9 +44,9 @@ export default function SignIn() {
 
   return (
     <AuthGuard redirectTo="/dashboard">
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-cyan-900/20">
+      <div className="min-h-screen bg-black">
         <Header />
-        
+
         <main className="pt-16 min-h-screen flex items-center justify-center px-6 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -53,71 +54,74 @@ export default function SignIn() {
             transition={{ duration: 0.6 }}
             className="w-full max-w-md"
           >
-            <div className="bg-gray-800 border border-gray-700 rounded-lg p-8">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 p-8">
               <div className="text-center mb-8">
                 <h2 className="text-3xl font-bold text-white mb-2">Sign In</h2>
-                <p className="text-gray-400">Welcome back to PrintsLB</p>
-            {error && (
-              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your email"
-                  required
-                />
+                <p className="text-zinc-400">Welcome back to PrintsLB</p>
               </div>
 
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                  Password
-                </label>
-                <input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter your password"
-                  required
-                />
+              <GoogleSignInButton />
+
+              <AuthDivider />
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-zinc-300 mb-2">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-zinc-500"
+                    placeholder="Enter your email"
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-zinc-300 mb-2">
+                    Password
+                  </label>
+                  <input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-zinc-500"
+                    placeholder="Enter your password"
+                    required
+                    autoComplete="current-password"
+                  />
+                </div>
+
+                <CtaButton type="submit" variant="primary" className="w-full" disabled={loading}>
+                  {loading ? 'Signing in...' : 'Sign In'}
+                </CtaButton>
+              </form>
+
+              <div className="mt-6 text-center">
+                <p className="text-zinc-400">
+                  Don&apos;t have an account?{' '}
+                  <Link href="/auth/signup" className="text-white hover:underline transition-colors">
+                    Sign up
+                  </Link>
+                </p>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Signing in...' : 'Sign In'}
-              </button>
-            </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-gray-400">
-                Don't have an account?{' '}
-                <Link href="/auth/signup" className="text-blue-400 hover:text-blue-300 transition-colors">
-                  Sign up
-                </Link>
-              </p>
             </div>
-          </div>
-          </div>
-        </motion.div>
-      </main>
+          </motion.div>
+        </main>
 
-      <Footer />
-    </div>
+        <Footer />
+      </div>
     </AuthGuard>
   )
 }

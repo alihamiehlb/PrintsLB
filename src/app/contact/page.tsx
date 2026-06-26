@@ -21,14 +21,14 @@ export default function ContactPage() {
             value: 'ali.hamieh.lb@gmail.com',
             description: 'For business inquiries and large projects',
             link: 'mailto:ali.hamieh.lb@gmail.com',
-            color: 'bg-blue-500/10 text-blue-400'
+            color: 'bg-white/10 text-white'
         },
         {
             icon: MapPin,
             title: 'Location',
             value: 'Lebanon',
             description: 'Shipping available across all regions',
-            color: 'bg-purple-500/10 text-purple-400'
+            color: 'bg-zinc-500/10 text-zinc-300'
         },
         {
             icon: Clock,
@@ -40,7 +40,7 @@ export default function ContactPage() {
     ]
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white">
+        <div className="min-h-screen bg-black text-white">
             <Header />
             <main className="pt-32 pb-20 px-6">
                 <div className="max-w-7xl mx-auto">
@@ -65,13 +65,13 @@ export default function ContactPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
-                                className="bg-gray-800/40 border border-gray-700/50 p-8 rounded-[2rem] backdrop-blur-md hover:border-blue-500/50 transition-all group"
+                                className="bg-zinc-800/40 border border-zinc-700/50 p-8 rounded-[2rem] backdrop-blur-md hover:border-white/50 transition-all group"
                             >
                                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 ${method.color}`}>
                                     <method.icon className="w-7 h-7" />
                                 </div>
                                 <h3 className="text-xl font-bold mb-2 text-white">{method.title}</h3>
-                                <div className="text-blue-400 font-medium mb-2 break-words">
+                                <div className="text-white font-medium mb-2 break-words">
                                     {method.link ? (
                                         <a href={method.link} target="_blank" rel="noopener noreferrer" className="hover:underline">
                                             {method.value}
@@ -91,7 +91,7 @@ export default function ContactPage() {
                         transition={{ delay: 0.4 }}
                         className="mt-20 flex flex-col items-center"
                     >
-                        <div className="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 p-12 rounded-[3rem] border border-blue-500/20 text-center max-w-4xl w-full backdrop-blur-xl">
+                        <div className="bg-zinc-900/40 p-12 rounded-[3rem] border border-zinc-700/50 text-center max-w-4xl w-full backdrop-blur-xl">
                             <h2 className="text-3xl md:text-4xl font-bold mb-6">Send a Direct Message</h2>
                             <p className="text-gray-300 mb-10 text-lg">
                                 The fastest way to get a quote or ask a question is via WhatsApp.

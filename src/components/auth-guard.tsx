@@ -33,7 +33,7 @@ export function AuthGuard({ children, requireAuth = false, redirectTo = '/' }: A
   // If loading, show nothing or a loading spinner
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-white">Loading...</div>
       </div>
     )

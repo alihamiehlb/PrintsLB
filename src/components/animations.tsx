@@ -28,7 +28,7 @@ export const FloatingParticles = () => {
       {particles.map((particle) => (
         <motion.div
           key={particle.id}
-          className="absolute bg-blue-500/20 rounded-full blur-sm"
+          className="absolute bg-white/10 rounded-full blur-sm"
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,
@@ -55,9 +55,8 @@ export const FloatingParticles = () => {
 export const GradientBackground = () => {
   return (
     <div className="fixed inset-0 -z-10">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-cyan-900/20 animate-pulse" />
-      <div className="absolute inset-0 bg-gradient-to-tr from-indigo-900/10 via-pink-900/10 to-blue-900/10 animate-pulse" style={{ animationDelay: '2s' }} />
-      <div className="absolute inset-0 bg-gradient-to-bl from-green-900/10 via-teal-900/10 to-cyan-900/10 animate-pulse" style={{ animationDelay: '4s' }} />
+      <div className="absolute inset-0 bg-gradient-to-br from-zinc-900/40 via-black/20 to-zinc-800/30 animate-pulse" />
+      <div className="absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-zinc-900/20 animate-pulse" style={{ animationDelay: '2s' }} />
     </div>
   )
 }
@@ -71,7 +70,7 @@ export const AnimatedNavLink = ({ children, href, className = "" }: { children: 
       whileTap={{ scale: 0.95 }}
     >
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-lg blur-md opacity-0 hover:opacity-100 transition-opacity duration-300"
+        className="absolute inset-0 bg-white/10 rounded-lg blur-md opacity-0 hover:opacity-100 transition-opacity duration-300"
       />
       {children}
     </motion.div>
@@ -102,7 +101,7 @@ export const PulsingButton = ({ children, onClick, href, className = "" }: { chi
       whileTap={{ scale: 0.95 }}
     >
       <motion.div
-        className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 hover:opacity-20 transition-opacity duration-300"
+        className="absolute inset-0 bg-white/20 opacity-0 hover:opacity-100 transition-opacity duration-300"
         animate={{
           scale: [1, 1.1, 1],
         }}
@@ -122,10 +121,10 @@ export const GlowingCard = ({ children, className = "" }: { children: React.Reac
   <motion.div
     className={`relative ${className}`}
     whileHover={{
-      boxShadow: "0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(6, 182, 212, 0.3)"
+      boxShadow: "0 0 30px rgba(255, 255, 255, 0.2), 0 0 60px rgba(255, 255, 255, 0.1)"
     }}
     animate={{
-      boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)"
+      boxShadow: "0 0 20px rgba(255, 255, 255, 0.1)"
     }}
     transition={{
       repeat: Infinity,
@@ -133,7 +132,7 @@ export const GlowingCard = ({ children, className = "" }: { children: React.Reac
     }}
   >
     <motion.div
-      className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"
+      className="absolute inset-0 bg-white/5 rounded-lg opacity-0 hover:opacity-100 transition-opacity duration-300"
     />
     {children}
   </motion.div>
@@ -160,18 +159,18 @@ export const TypingAnimation = ({ text, className = "" }: { text: string; classN
       <motion.span
         animate={{ opacity: [1, 0, 1] }}
         transition={{ duration: 0.5, repeat: Infinity }}
-        className="inline-block w-0.5 h-5 bg-blue-400 ml-1"
+        className="inline-block w-0.5 h-5 bg-white ml-1"
       />
     </span>
   )
 }
 
 // Floating Action Button
-export const FloatingActionButton = ({ icon: Icon, onClick, label }: { icon: React.ElementType; onClick: () => void; label: string }) => {
+export const FloatingActionButton = ({ icon: Icon, onClick, label }: { icon: React.ComponentType<{ className?: string }>; onClick: () => void; label: string }) => {
   return (
     <motion.button
       onClick={onClick}
-      className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center group"
+      className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-white text-black rounded-full shadow-lg hover:shadow-xl flex items-center justify-center group"
       whileHover={{ scale: 1.1, rotate: 15 }}
       whileTap={{ scale: 0.9 }}
       animate={{
@@ -183,7 +182,7 @@ export const FloatingActionButton = ({ icon: Icon, onClick, label }: { icon: Rea
         ease: "easeInOut"
       }}
     >
-      <Icon className="w-6 h-6 text-white" />
+      <Icon className="w-6 h-6" />
       <span className="absolute right-full mr-3 px-3 py-1 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
         {label}
       </span>
@@ -201,9 +200,9 @@ export const Shimmer = ({ className = "" }: { className?: string }) => (
 // Pulse Ring Effect
 export const PulseRing = ({ className = "" }: { className?: string }) => (
   <div className={`relative ${className}`}>
-    <div className="absolute inset-0 rounded-full border-2 border-blue-400 animate-ping" />
-    <div className="absolute inset-0 rounded-full border-2 border-blue-400 animate-ping" style={{ animationDelay: '0.5s' }} />
-    <div className="relative rounded-full border-2 border-blue-400" />
+    <div className="absolute inset-0 rounded-full border-2 border-white/40 animate-ping" />
+    <div className="absolute inset-0 rounded-full border-2 border-white/40 animate-ping" style={{ animationDelay: '0.5s' }} />
+    <div className="relative rounded-full border-2 border-white/60" />
   </div>
 )
 
@@ -253,8 +252,8 @@ export const WaveAnimation = ({ className = "" }: { className?: string }) => {
         />
         <defs>
           <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(59, 130, 246, 0.3)" />
-            <stop offset="100%" stopColor="rgba(6, 182, 212, 0.3)" />
+            <stop offset="0%" stopColor="rgba(255, 255, 255, 0.15)" />
+            <stop offset="100%" stopColor="rgba(161, 161, 170, 0.1)" />
           </linearGradient>
         </defs>
       </svg>

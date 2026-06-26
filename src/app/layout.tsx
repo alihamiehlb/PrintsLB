@@ -55,7 +55,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased bg-gray-900 text-white`}>
+      <body className={`${inter.variable} font-sans antialiased bg-black text-white`}>
         {process.env.NEXT_PUBLIC_GA_ID && (
           <Suspense fallback={null}>
             <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />

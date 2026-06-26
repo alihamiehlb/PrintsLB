@@ -7,7 +7,7 @@ import { Shield } from 'lucide-react'
 
 export default function PrivacyPage() {
     return (
-        <div className="min-h-screen bg-gray-900 text-white">
+        <div className="min-h-screen bg-black text-white">
             <Header />
             <main className="pt-24 pb-20 px-6 max-w-4xl mx-auto">
                 <motion.div
@@ -16,8 +16,8 @@ export default function PrivacyPage() {
                     className="bg-gray-800/50 p-8 md:p-12 rounded-3xl border border-gray-700 backdrop-blur-sm"
                 >
                     <div className="flex items-center space-x-4 mb-8">
-                        <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                            <Shield className="w-6 h-6 text-blue-400" />
+                        <div className="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                            <Shield className="w-6 h-6 text-white" />
                         </div>
                         <h1 className="text-3xl md:text-5xl font-bold">Privacy Policy</h1>
                     </div>

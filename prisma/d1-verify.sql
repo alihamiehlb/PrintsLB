@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS "__schema_probe";
+SELECT COUNT(*) AS users FROM "users";
+SELECT COUNT(*) AS materials FROM "materials";
+SELECT COUNT(*) AS print_jobs FROM "print_jobs";
+SELECT COUNT(*) AS orders FROM "orders";
+SELECT COUNT(*) AS order_tracking FROM "order_tracking";
+SELECT COUNT(*) AS pricing_settings FROM "pricing_settings";
+SELECT COUNT(*) AS products FROM "products";
+SELECT COUNT(*) AS high_scores FROM "high_scores";
+SELECT COUNT(*) AS accounts FROM "accounts";

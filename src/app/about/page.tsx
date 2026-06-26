@@ -37,12 +37,12 @@ export default function AboutPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-cyan-900/20">
+    <div className="min-h-screen bg-black">
       <Header />
       
       {/* Hero Section */}
       <section className="relative overflow-hidden px-6 py-20 md:px-12">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-cyan-600/20 blur-3xl"></div>
+        <div className="absolute inset-0 bg-white/5 blur-3xl"></div>
         <motion.div 
           className="relative mx-auto max-w-4xl text-center"
           initial={{ opacity: 0, y: 20 }}
@@ -120,7 +120,7 @@ export default function AboutPage() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
-                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-r from-blue-500 to-cyan-500">
+                <div className="mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl border border-zinc-700 bg-zinc-900">
                   <feature.icon className="h-8 w-8 text-white" />
                 </div>
                 <h3 className="mb-2 text-xl font-semibold text-white">{feature.title}</h3>
@@ -170,7 +170,7 @@ export default function AboutPage() {
       {/* CTA */}
       <section className="px-6 py-20 md:px-12">
         <motion.div 
-          className="mx-auto max-w-4xl rounded-3xl border border-gray-800 bg-gradient-to-br from-gray-900/90 to-blue-900/90 p-12 text-center backdrop-blur-sm"
+          className="mx-auto max-w-4xl rounded-3xl border border-zinc-800 bg-zinc-950 p-12 text-center backdrop-blur-sm"
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6 }}
@@ -184,7 +184,7 @@ export default function AboutPage() {
           </p>
           <Link 
             href="/upload"
-            className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 px-8 py-4 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            className="inline-flex items-center justify-center rounded-lg bg-white px-8 py-4 font-semibold text-black shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] transition-all duration-300 hover:scale-105"
           >
             Upload Your STL File
             <ArrowRight className="ml-2 h-5 w-5" />

@@ -82,7 +82,7 @@ export default function AdminPanel() {
     revenueHistory: [] as { name: string, revenue: number }[]
   })
 
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899']
+  const COLORS = ['#FFFFFF', '#A1A1AA', '#71717A', '#52525B', '#D4D4D8', '#3F3F46']
   const [pricingSettings, setPricingSettings] = useState({
     taxRate: 0,
     serviceFee: 2.5,
@@ -137,7 +137,7 @@ export default function AdminPanel() {
     try {
       const response = await fetch('/api/admin/settings')
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json() as { taxRate: number; serviceFee: number; scaleMultiplier: number }
         setPricingSettings(data)
       }
     } catch (error) {
@@ -168,7 +168,7 @@ export default function AdminPanel() {
     try {
       const response = await fetch('/api/admin/stats')
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json() as typeof stats
         setStats(data)
       }
     } catch (error) {
@@ -180,7 +180,7 @@ export default function AdminPanel() {
     try {
       const response = await fetch('/api/admin/materials')
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json() as Material[]
         setMaterials(data)
       }
     } catch (error) {
@@ -192,7 +192,7 @@ export default function AdminPanel() {
     try {
       const response = await fetch('/api/admin/print-jobs')
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json() as PrintJob[]
         setPrintJobs(data)
       }
     } catch (error) {
@@ -204,7 +204,7 @@ export default function AdminPanel() {
     try {
       const response = await fetch('/api/admin/products')
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json() as Product[]
         setProducts(data)
       }
     } catch (error) {
@@ -216,7 +216,7 @@ export default function AdminPanel() {
     try {
       const response = await fetch('/api/admin/users')
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json() as User[]
         setUsers(data)
       }
     } catch (error) {
@@ -384,11 +384,11 @@ export default function AdminPanel() {
       case 'PENDING':
         return <Clock className="w-4 h-4 text-yellow-400" />
       case 'VALIDATING':
-        return <AlertCircle className="w-4 h-4 text-blue-400" />
+        return <AlertCircle className="w-4 h-4 text-white" />
       case 'CONFIRMED':
-        return <CheckCircle className="w-4 h-4 text-blue-400" />
+        return <CheckCircle className="w-4 h-4 text-white" />
       case 'PRINTING':
-        return <Package className="w-4 h-4 text-purple-400" />
+        return <Package className="w-4 h-4 text-zinc-300" />
       case 'SHIPPED':
         return <Truck className="w-4 h-4 text-green-400" />
       case 'DELIVERED':
@@ -403,11 +403,11 @@ export default function AdminPanel() {
 
   // Analytics data
   const orderStatusData = [
-    { name: 'Pending', value: printJobs.filter(j => j.status === 'PENDING').length, color: '#FCD34D' },
-    { name: 'Validating', value: printJobs.filter(j => j.status === 'VALIDATING').length, color: '#60A5FA' },
-    { name: 'Printing', value: printJobs.filter(j => j.status === 'PRINTING').length, color: '#A78BFA' },
-    { name: 'Shipped', value: printJobs.filter(j => j.status === 'SHIPPED').length, color: '#34D399' },
-    { name: 'Delivered', value: printJobs.filter(j => j.status === 'DELIVERED').length, color: '#10B981' },
+    { name: 'Pending', value: printJobs.filter(j => j.status === 'PENDING').length, color: '#52525B' },
+    { name: 'Validating', value: printJobs.filter(j => j.status === 'VALIDATING').length, color: '#71717A' },
+    { name: 'Printing', value: printJobs.filter(j => j.status === 'PRINTING').length, color: '#A1A1AA' },
+    { name: 'Shipped', value: printJobs.filter(j => j.status === 'SHIPPED').length, color: '#D4D4D8' },
+    { name: 'Delivered', value: printJobs.filter(j => j.status === 'DELIVERED').length, color: '#FFFFFF' },
   ]
 
   const revenueData = printJobs.slice(0, 7).reverse().map((job, i) => ({
@@ -417,7 +417,7 @@ export default function AdminPanel() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-black">
         <Header />
         <main className="pt-16 min-h-screen flex items-center justify-center">
           <div className="text-white">Loading...</div>
@@ -436,19 +436,19 @@ export default function AdminPanel() {
       title: 'Total Orders',
       value: stats.totalOrders,
       icon: Package,
-      color: 'from-blue-500 to-blue-600'
+      color: 'from-zinc-300 to-white'
     },
     {
       title: 'Total Users',
       value: stats.totalUsers,
       icon: Users,
-      color: 'from-green-500 to-green-600'
+      color: 'from-zinc-400 to-zinc-200'
     },
     {
       title: 'Total Revenue',
       value: `$${(stats.totalRevenue || 0).toFixed(2)}`,
       icon: DollarSign,
-      color: 'from-purple-500 to-purple-600'
+      color: 'from-zinc-500 to-zinc-300'
     },
     {
       title: 'Total Profit',
@@ -459,7 +459,7 @@ export default function AdminPanel() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900/20 to-cyan-900/20">
+    <div className="min-h-screen bg-black">
       <Header />
 
       <main className="pt-16">
@@ -498,8 +498,8 @@ export default function AdminPanel() {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
                     className={`flex items-center space-x-2 py-2 px-4 rounded-md font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab.id
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white'
-                      : 'text-gray-400 hover:text-white'
+                      ? 'bg-white text-black'
+                      : 'text-zinc-400 hover:text-white'
                       }`}
                   >
                     <tab.icon className="w-4 h-4" />
@@ -562,7 +562,7 @@ export default function AdminPanel() {
                           className="w-full p-4 bg-gray-800/50 hover:bg-gray-800/70 rounded-lg transition-all duration-200 text-left group"
                         >
                           <div className="flex items-center space-x-4">
-                            <Package className="w-6 h-6 text-blue-400 group-hover:scale-110 transition-transform" />
+                            <Package className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
                             <div>
                               <p className="text-white font-medium">Manage Materials</p>
                               <p className="text-gray-400 text-sm">Add, edit, and remove materials</p>
@@ -575,7 +575,7 @@ export default function AdminPanel() {
                           className="w-full p-4 bg-gray-800/50 hover:bg-gray-800/70 rounded-lg transition-all duration-200 text-left group"
                         >
                           <div className="flex items-center space-x-4">
-                            <Truck className="w-6 h-6 text-purple-400 group-hover:scale-110 transition-transform" />
+                            <Truck className="w-6 h-6 text-zinc-300 group-hover:scale-110 transition-transform" />
                             <div>
                               <p className="text-white font-medium">Manage Orders</p>
                               <p className="text-gray-400 text-sm">View and update order status</p>
@@ -621,7 +621,7 @@ export default function AdminPanel() {
                     <h2 className="text-2xl font-bold text-white">Materials Management</h2>
                     <button
                       onClick={() => setShowAddMaterial(true)}
-                      className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105"
+                      className="inline-flex items-center px-4 py-2 bg-white text-black rounded-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] transition-all duration-300 hover:scale-105 font-semibold"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Material
@@ -664,7 +664,7 @@ export default function AdminPanel() {
                               <div className="flex space-x-2">
                                 <button
                                   onClick={() => setEditingMaterial(material)}
-                                  className="p-1 text-blue-400 hover:text-blue-300 transition-colors"
+                                  className="p-1 text-white hover:text-zinc-300 transition-colors"
                                 >
                                   <Edit className="w-4 h-4" />
                                 </button>
@@ -697,7 +697,7 @@ export default function AdminPanel() {
                             <p className="text-gray-400">Customer: {job.userName}</p>
                             <p className="text-gray-400">Material: {job.materialName}</p>
                             <p className="text-gray-400">Order ID: {job.orderId}</p>
-                            <p className="text-blue-400 font-medium">WhatsApp: {job.phoneNumber}</p>
+                            <p className="text-zinc-300 font-medium">WhatsApp: {job.phoneNumber}</p>
                             {job.customerNotes && (
                               <div className="mt-2 p-2 bg-gray-900 rounded text-sm">
                                 <p className="text-gray-400 font-medium">Notes & Specs:</p>
@@ -739,7 +739,7 @@ export default function AdminPanel() {
                                 <a
                                   href={job.fileUrl}
                                   download={job.fileName}
-                                  className="inline-flex items-center px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+                                  className="inline-flex items-center px-3 py-1 bg-white text-black text-sm rounded-lg hover:bg-zinc-200 transition-colors font-semibold"
                                 >
                                   <Download className="w-4 h-4 mr-1" />
                                   Download STL
@@ -750,7 +750,7 @@ export default function AdminPanel() {
                                 <select
                                   value={job.status}
                                   onChange={(e) => handleUpdateJobStatus(job.id, e.target.value)}
-                                  className="bg-gray-700 text-white text-sm rounded px-2 py-1 border border-gray-600 focus:outline-none focus:border-blue-500"
+                                  className="bg-zinc-800 text-white text-sm rounded px-2 py-1 border border-zinc-600 focus:outline-none focus:border-white"
                                 >
                                   <option value="PENDING">PENDING</option>
                                   <option value="VALIDATING">VALIDATING</option>
@@ -792,7 +792,7 @@ export default function AdminPanel() {
                     <h2 className="text-2xl font-bold text-white">Products Management</h2>
                     <button
                       onClick={() => setShowAddProduct(true)}
-                      className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105"
+                      className="inline-flex items-center px-4 py-2 bg-white text-black rounded-lg hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] transition-all duration-300 hover:scale-105 font-semibold"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Product
@@ -815,7 +815,7 @@ export default function AdminPanel() {
                             <p className="text-gray-400 text-sm mb-2">{product.description}</p>
                           )}
                           {product.category && (
-                            <span className="inline-block px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs mb-2">
+                            <span className="inline-block px-2 py-1 bg-white/10 text-white rounded text-xs mb-2">
                               {product.category}
                             </span>
                           )}
@@ -828,7 +828,7 @@ export default function AdminPanel() {
                           <div className="flex space-x-2">
                             <button
                               onClick={() => setEditingProduct(product)}
-                              className="flex-1 px-3 py-2 bg-blue-500 text-white text-sm rounded hover:bg-blue-600"
+                              className="flex-1 px-3 py-2 bg-white text-black text-sm rounded hover:bg-zinc-200 font-semibold"
                             >
                               <Edit className="w-4 h-4 inline mr-1" />
                               Edit
@@ -878,8 +878,8 @@ export default function AdminPanel() {
                             <td className="py-3 px-4 text-gray-300">{user.email}</td>
                             <td className="py-3 px-4">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.role === 'ADMIN'
-                                ? 'bg-purple-500/20 text-purple-400'
-                                : 'bg-blue-500/20 text-blue-400'
+                                ? 'bg-white text-black'
+                                : 'bg-white/10 text-zinc-300'
                                 }`}>
                                 {user.role}
                               </span>
@@ -942,7 +942,7 @@ export default function AdminPanel() {
                             contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }}
                             formatter={(value: any) => [`$${Number(value || 0).toFixed(2)}`, 'Revenue']}
                           />
-                          <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={3} dot={{ fill: '#3B82F6', r: 4 }} activeDot={{ r: 6 }} />
+                          <Line type="monotone" dataKey="revenue" stroke="#FFFFFF" strokeWidth={3} dot={{ fill: '#FFFFFF', r: 4 }} activeDot={{ r: 6 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </div>
@@ -1047,7 +1047,7 @@ export default function AdminPanel() {
                     type="checkbox"
                     checked={newMaterial.available}
                     onChange={(e) => setNewMaterial(prev => ({ ...prev, available: e.target.checked }))}
-                    className="w-4 h-4 text-blue-500 bg-gray-800 border-gray-600 rounded"
+                    className="w-4 h-4 text-white bg-zinc-800 border-zinc-600 rounded accent-white"
                   />
                   <label className="ml-2 text-sm text-gray-400">Available</label>
                 </div>
@@ -1062,7 +1062,7 @@ export default function AdminPanel() {
                 </button>
                 <button
                   onClick={handleAddMaterial}
-                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-semibold"
                 >
                   Add Material
                 </button>
@@ -1138,7 +1138,7 @@ export default function AdminPanel() {
                     type="checkbox"
                     checked={editingMaterial.available}
                     onChange={(e) => setEditingMaterial(prev => prev ? ({ ...prev, available: e.target.checked }) : null)}
-                    className="w-4 h-4 text-blue-500 bg-gray-800 border-gray-600 rounded"
+                    className="w-4 h-4 text-white bg-zinc-800 border-zinc-600 rounded accent-white"
                   />
                   <label className="ml-2 text-sm text-gray-400">Available</label>
                 </div>
@@ -1153,7 +1153,7 @@ export default function AdminPanel() {
                 </button>
                 <button
                   onClick={() => handleUpdateMaterial(editingMaterial)}
-                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-semibold"
                 >
                   Update Material
                 </button>
@@ -1254,7 +1254,7 @@ export default function AdminPanel() {
                     type="checkbox"
                     checked={newProduct.inStock}
                     onChange={(e) => setNewProduct(prev => ({ ...prev, inStock: e.target.checked }))}
-                    className="w-4 h-4 text-blue-500 bg-gray-800 border-gray-600 rounded"
+                    className="w-4 h-4 text-white bg-zinc-800 border-zinc-600 rounded accent-white"
                   />
                   <label className="ml-2 text-sm text-gray-400">In Stock</label>
                 </div>
@@ -1269,7 +1269,7 @@ export default function AdminPanel() {
                 </button>
                 <button
                   onClick={handleAddProduct}
-                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-semibold"
                 >
                   Add Product
                 </button>
@@ -1365,7 +1365,7 @@ export default function AdminPanel() {
                     type="checkbox"
                     checked={editingProduct.inStock}
                     onChange={(e) => setEditingProduct(prev => prev ? ({ ...prev, inStock: e.target.checked }) : null)}
-                    className="w-4 h-4 text-blue-500 bg-gray-800 border-gray-600 rounded"
+                    className="w-4 h-4 text-white bg-zinc-800 border-zinc-600 rounded accent-white"
                   />
                   <label className="ml-2 text-sm text-gray-400">In Stock</label>
                 </div>
@@ -1380,7 +1380,7 @@ export default function AdminPanel() {
                 </button>
                 <button
                   onClick={() => handleUpdateProduct(editingProduct)}
-                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-semibold"
                 >
                   Update Product
                 </button>

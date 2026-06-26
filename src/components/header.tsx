@@ -42,9 +42,9 @@ export function Header() {
   const fetchGlobalTop = async () => {
     try {
       const res = await fetch('/api/game/high-score')
-      const data = await res.json()
+      const data = await res.json() as { score?: number; playerName?: string }
       if (data.score !== undefined) {
-        setGlobalTop({ score: data.score, playerName: data.playerName })
+        setGlobalTop({ score: data.score, playerName: data.playerName ?? 'Anonymous' })
       }
     } catch (e) {
       console.error('Failed to fetch global top score')
@@ -111,7 +111,7 @@ export function Header() {
   }
 
   return (
-    <header className={`fixed top-0 w-full bg-gray-900/95 backdrop-blur-sm border-b border-blue-500/20 z-50 transition-all duration-1000 ${isZeroG ? 'py-8 shadow-[0_0_50px_rgba(59,130,246,0.5)]' : ''}`}>
+    <header className={`fixed top-0 w-full bg-black/90 backdrop-blur-md border-b border-zinc-800 z-50 transition-all duration-1000 ${isZeroG ? 'py-8 shadow-[0_0_50px_rgba(255,255,255,0.15)]' : ''}`}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className={`flex justify-between items-center h-16 transition-transform duration-1000 ${isZeroG ? 'scale-110' : ''}`}>
           <div className="flex items-center space-x-4">
@@ -132,9 +132,9 @@ export function Header() {
                   scale: [1, 1.1, 1]
                 } : {}}
                 transition={{ duration: 3, repeat: (isZeroG || gameActive) ? Infinity : 0 }}
-                className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center relative overflow-hidden"
+                className="w-8 h-8 bg-white text-black rounded-lg flex items-center justify-center relative overflow-hidden"
               >
-                <span className="text-white font-bold text-sm relative z-10">PLB</span>
+                <span className="font-bold text-sm relative z-10">PLB</span>
               </motion.div>
               <div className="flex flex-col">
                 <span className="text-white font-bold text-xl hidden sm:inline">PrintsLB</span>
@@ -145,10 +145,10 @@ export function Header() {
                       animate={{ opacity: 1, x: 0 }}
                       className="flex flex-col"
                     >
-                      <span className="text-[10px] font-bold text-green-400 tracking-tighter uppercase leading-none">
+                      <span className="text-[10px] font-bold text-emerald-400 tracking-tighter uppercase leading-none">
                         Score: {score} | Top: {highScore}
                       </span>
-                      <span className="text-[8px] font-bold text-blue-400 tracking-tighter uppercase leading-none mt-0.5">
+                      <span className="text-[8px] font-bold text-zinc-400 tracking-tighter uppercase leading-none mt-0.5">
                         Record: {globalTop.playerName} ({globalTop.score})
                       </span>
                     </motion.div>
@@ -178,9 +178,9 @@ export function Header() {
                       rotate: { duration: 4, repeat: Infinity, ease: 'linear' },
                       scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
                     }}
-                    className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-r from-blue-600 via-cyan-400 to-indigo-600 rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(59,130,246,0.8)] border-2 border-white/20"
+                    className="w-12 h-12 md:w-16 md:h-16 bg-white text-black rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(255,255,255,0.3)] border-2 border-zinc-700"
                   >
-                    <span className="text-white font-black text-xl md:text-2xl">PLB</span>
+                    <span className="font-black text-xl md:text-2xl">PLB</span>
                   </motion.div>
                 </motion.div>
 
@@ -188,7 +188,7 @@ export function Header() {
                   initial={{ opacity: 0, y: 50 }}
                   animate={{ opacity: 1, y: 0 }}
                   onClick={() => setGameActive(false)}
-                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[101] bg-white text-gray-900 px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-gray-100 transition-all border-4 border-blue-500 active:scale-95"
+                  className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[101] bg-white text-black px-8 py-3 rounded-full font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-zinc-100 transition-all border-2 border-zinc-300 active:scale-95"
                 >
                   EXIT GAME
                 </motion.button>
@@ -199,7 +199,7 @@ export function Header() {
           <div className="hidden md:flex items-center space-x-6">
             {navigation.map((item) => (
               <Link key={item.name} href={item.href}>
-                <AnimatedNavLink className={`text-sm ${pathname === item.href ? 'text-blue-400 font-semibold' : 'text-gray-300 hover:text-white'} transition-colors duration-200`}>
+                <AnimatedNavLink className={`text-sm ${pathname === item.href ? 'text-white font-semibold' : 'text-zinc-400 hover:text-white'} transition-colors duration-200`}>
                   {item.name}
                 </AnimatedNavLink>
               </Link>
@@ -209,7 +209,7 @@ export function Header() {
           <div className="hidden md:flex items-center space-x-4">
             {session?.user?.role === 'ADMIN' && (
               <Link href="/admin">
-                <PulsingButton className="px-4 py-1.5 bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 text-blue-400 text-xs font-bold rounded-full flex items-center transition-all">
+                <PulsingButton className="px-4 py-1.5 bg-white/10 border border-zinc-600 hover:bg-white/15 text-white text-xs font-bold rounded-full flex items-center transition-all">
                   <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
                   ADMIN PANEL
                 </PulsingButton>
@@ -222,7 +222,7 @@ export function Header() {
                 </Link>
                 <PulsingButton
                   onClick={() => signOut()}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg text-sm font-semibold"
+                  className="px-4 py-2 bg-white text-black rounded-lg text-sm font-semibold"
                 >
                   Sign Out
                 </PulsingButton>
@@ -237,7 +237,7 @@ export function Header() {
                 </Link>
                 <PulsingButton
                   href="/auth/signup"
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg"
+                  className="px-4 py-2 bg-white text-black rounded-lg font-semibold hover:shadow-[0_0_20px_rgba(255,255,255,0.25)] transition-shadow"
                 >
                   Sign Up
                 </PulsingButton>
@@ -279,7 +279,7 @@ export function Header() {
                       {session.user?.role === 'ADMIN' && (
                         <Link
                           href="/admin"
-                          className="block px-3 py-2 text-blue-400 font-bold hover:text-blue-300 transition-colors duration-200"
+                          className="block px-3 py-2 text-white font-bold hover:text-zinc-300 transition-colors duration-200"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           <ShieldCheck className="w-4 h-4 inline mr-2" />

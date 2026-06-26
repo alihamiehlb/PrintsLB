@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth-options'
+import { parseJsonBody } from '@/lib/json'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
@@ -11,7 +12,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const data = await request.json()
+    const data = await parseJsonBody<{
+      materialName: string
+      fileName: string
+      fileSize: number
+      materialUsed?: number
+      totalPrice: string | number
+      customerNotes?: string
+      fileUrl?: string
+      phoneNumber?: string
+    }>(request)
 
     // Find user
     const user = await prisma.user.findUnique({
@@ -42,7 +52,7 @@ export async function POST(request: NextRequest) {
         materialUsed: data.materialUsed || 0,
         baseCost: (material.pricePerGram * (data.materialUsed || 0)),
         profit: 2.50,
-        totalPrice: parseFloat(data.totalPrice),
+        totalPrice: Number(data.totalPrice),
         status: 'PENDING',
         notes: data.customerNotes
       }
@@ -53,7 +63,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: user.id,
         status: 'PENDING',
-        totalAmount: parseFloat(data.totalPrice),
+        totalAmount: Number(data.totalPrice),
         notes: data.customerNotes || '',
         fileUrl: data.fileUrl,
         phoneNumber: data.phoneNumber,

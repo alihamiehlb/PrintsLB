@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { parseJsonBody } from '@/lib/json'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth-options'
 
 export async function GET() {
     try {
@@ -19,7 +20,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const session = await getServerSession(authOptions)
-        const { score } = await request.json()
+        const { score } = await parseJsonBody<{ score: number }>(request)
 
         if (typeof score !== 'number') {
             return NextResponse.json({ error: 'Invalid score' }, { status: 400 })

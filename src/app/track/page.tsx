@@ -53,7 +53,7 @@ export default function TrackOrder() {
     try {
       const response = await fetch('/api/orders')
       if (response.ok) {
-        const data = await response.json()
+        const data = await response.json() as Order[]
         setOrders(data)
       }
     } catch (error) {
@@ -72,11 +72,11 @@ export default function TrackOrder() {
       case 'PENDING':
         return <Clock className="w-5 h-5 text-yellow-400" />
       case 'VALIDATING':
-        return <CheckCircle className="w-5 h-5 text-blue-400" />
+        return <CheckCircle className="w-5 h-5 text-white" />
       case 'CONFIRMED':
-        return <CheckCircle className="w-5 h-5 text-blue-400" />
+        return <CheckCircle className="w-5 h-5 text-white" />
       case 'PRINTING':
-        return <Package className="w-5 h-5 text-purple-400" />
+        return <Package className="w-5 h-5 text-zinc-300" />
       case 'SHIPPED':
         return <Truck className="w-5 h-5 text-green-400" />
       case 'DELIVERED':
@@ -94,11 +94,11 @@ export default function TrackOrder() {
       case 'PENDING':
         return 'text-yellow-400 bg-yellow-400/20 border-yellow-400/50'
       case 'VALIDATING':
-        return 'text-blue-400 bg-blue-400/20 border-blue-400/50'
+        return 'text-white bg-white/10 border-white/40'
       case 'CONFIRMED':
-        return 'text-blue-400 bg-blue-400/20 border-blue-400/50'
+        return 'text-white bg-white/10 border-white/40'
       case 'PRINTING':
-        return 'text-purple-400 bg-purple-400/20 border-purple-400/50'
+        return 'text-zinc-200 bg-zinc-400/15 border-zinc-400/40'
       case 'SHIPPED':
         return 'text-green-400 bg-green-400/20 border-green-400/50'
       case 'DELIVERED':
@@ -113,7 +113,7 @@ export default function TrackOrder() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-black">
         <Header />
         <main className="pt-16 min-h-screen flex items-center justify-center">
           <div className="text-white">Loading...</div>
@@ -207,7 +207,7 @@ export default function TrackOrder() {
                                   {/* Progress Line */}
                                   <div className="absolute top-5 left-8 right-8 h-0.5 bg-gray-700">
                                     <motion.div
-                                      className="h-full bg-blue-500"
+                                      className="h-full bg-white"
                                       initial={{ width: 0 }}
                                       animate={{
                                         width: `${(['PENDING', 'VALIDATING', 'CONFIRMED', 'PRINTING', 'SHIPPED', 'DELIVERED'].indexOf(order.status) / 5) * 100}%`
@@ -231,9 +231,9 @@ export default function TrackOrder() {
                                     return (
                                       <div key={label} className="relative flex flex-col items-center z-10 w-16">
                                         <motion.div
-                                          className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors duration-500 ${isCompleted ? 'bg-blue-500 border-blue-500 text-white' :
-                                            isActive ? 'bg-gray-900 border-blue-500 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.5)]' :
-                                              'bg-gray-900 border-gray-700 text-gray-600'
+                                          className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors duration-500 ${isCompleted ? 'bg-white border-white text-black' :
+                                            isActive ? 'bg-black border-white text-white shadow-[0_0_15px_rgba(255,255,255,0.5)]' :
+                                              'bg-zinc-900 border-zinc-700 text-zinc-600'
                                             }`}
                                           initial={false}
                                           animate={isActive ? { scale: [1, 1.1, 1] } : { scale: 1 }}
@@ -245,7 +245,7 @@ export default function TrackOrder() {
                                             <span className="text-sm font-bold">{idx + 1}</span>
                                           )}
                                         </motion.div>
-                                        <span className={`mt-3 text-[10px] font-bold uppercase tracking-wider text-center ${isActive ? 'text-blue-400' : isCompleted ? 'text-gray-300' : 'text-gray-600'
+                                        <span className={`mt-3 text-[10px] font-bold uppercase tracking-wider text-center ${isActive ? 'text-white' : isCompleted ? 'text-zinc-300' : 'text-zinc-600'
                                           }`}>
                                           {label}
                                         </span>
@@ -265,7 +265,7 @@ export default function TrackOrder() {
                                       <div className="pt-2 flex flex-wrap gap-4">
                                         <a
                                           href={order.fileUrl}
-                                          className="inline-flex items-center text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+                                          className="inline-flex items-center text-white hover:text-zinc-300 text-sm font-medium transition-colors"
                                           download
                                         >
                                           <Download className="w-4 h-4 mr-2" />
@@ -295,7 +295,7 @@ export default function TrackOrder() {
                                   <div className="space-y-4 border-l-2 border-gray-700 ml-2 pl-6">
                                     {order.tracking.map((track, idx) => (
                                       <div key={idx} className="relative">
-                                        <div className="absolute -left-[31px] top-1.5 w-2 h-2 rounded-full bg-blue-500 ring-4 ring-gray-900"></div>
+                                        <div className="absolute -left-[31px] top-1.5 w-2 h-2 rounded-full bg-white ring-4 ring-black"></div>
                                         <p className="text-gray-100 text-sm font-bold">{track.status}</p>
                                         <p className="text-gray-500 text-[10px] uppercase font-bold tracking-tighter">{new Date(track.timestamp).toLocaleString()}</p>
                                         <p className="text-gray-400 text-sm mt-1 leading-relaxed">{track.description}</p>
@@ -337,7 +337,7 @@ export default function TrackOrder() {
                                       if (res.ok) {
                                         fetchOrders();
                                       } else {
-                                        const err = await res.json();
+                                        const err = await res.json() as { error?: string };
                                         alert(err.error || 'Failed to cancel');
                                       }
                                     } catch (err) {

@@ -1,0 +1,46 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "printslb",
+  "compatibility_date": "2026-06-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": ".open-next/worker.js",
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "printslb-db",
+      "database_id": "24b185bd-506b-4448-90f0-5f14edc2438c"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "printslb-images"
+    },
+    {
+      "binding": "UPLOADS",
+      "bucket_name": "printslb-uploads"
+    }
+  ],
+  "vars": {
+    "NEXTAUTH_URL": "https://printslb.com"
+  },
+  // Custom domain. Requires the zone "printslb.com" to be ACTIVE on this
+  // Cloudflare account (add the site in the dashboard + point the registrar
+  // nameservers to Cloudflare). Once the zone is active, uncomment the routes
+  // below and run `npm run deploy` (or push to trigger CI) to attach the
+  // custom domain + TLS automatically.
+  // "routes": [
+  //   { "pattern": "printslb.com", "custom_domain": true },
+  //   { "pattern": "www.printslb.com", "custom_domain": true }
+  // ],
+  "observability": {
+    "enabled": true
+  },
+  "placement": {
+    "mode": "smart"
+  }
+}

@@ -1,6 +1,8 @@
+import { Role } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import { authOptions } from '@/lib/auth-options'
+import { parseJsonBody } from '@/lib/json'
 import { prisma } from '@/lib/prisma'
 
 // GET all users (Admin only)
@@ -43,7 +45,7 @@ export async function PUT(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
         }
 
-        const { userId, role } = await request.json()
+        const { userId, role } = await parseJsonBody<{ userId: string; role: Role }>(request)
 
         const user = await prisma.user.update({
             where: { id: userId },

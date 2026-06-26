@@ -1,8 +1,15 @@
+import { parseJsonBody } from '@/lib/json'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, phone, service, message } = await request.json()
+    const { name, email, phone, service, message } = await parseJsonBody<{
+      name: string
+      email: string
+      phone?: string
+      service?: string
+      message: string
+    }>(request)
 
     if (!name || !email || !message) {
       return NextResponse.json(
