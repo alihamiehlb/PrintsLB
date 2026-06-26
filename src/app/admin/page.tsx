@@ -10,7 +10,8 @@ import {
   Package, Users, DollarSign, Settings, Plus, Edit, X, TrendingUp,
   Clock, CheckCircle, AlertCircle, Download, Trash2, Truck, Upload, BarChart3, Image
 } from 'lucide-react'
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { OptimizedImage } from '@/components/ui/optimized-image'
 
 interface Material {
   id: string
@@ -458,75 +459,95 @@ export default function AdminPanel() {
     }
   ]
 
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: TrendingUp },
+    { id: 'materials', label: 'Materials', icon: Package },
+    { id: 'orders', label: 'Orders', icon: Truck },
+    { id: 'products', label: 'Products', icon: Image },
+    { id: 'users', label: 'Users', icon: Users },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  ] as const
+
+  const activeTabMeta = tabs.find((t) => t.id === activeTab)
+
   return (
     <div className="min-h-screen bg-black">
       <Header />
 
       <main className="pt-16">
-        <section className="py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="flex items-center justify-between mb-8">
-                <h1 className="text-4xl font-bold text-white">Admin Panel</h1>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => router.push('/settings')}
-                    className="p-2 text-gray-400 hover:text-white transition-colors"
-                    title="General Settings"
-                  >
-                    <Settings className="w-6 h-6" />
-                  </button>
-                  <span className="text-gray-400">PrintsLB Management</span>
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-10">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Sidebar */}
+            <aside className="lg:w-64 lg:shrink-0">
+              <div className="lg:sticky lg:top-24 space-y-6">
+                <div className="hidden lg:block">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-zinc-500">PrintsLB</p>
+                  <h1 className="text-2xl font-bold text-white mt-1">Admin Panel</h1>
+                </div>
+
+                <nav className="flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible -mx-1 px-1 pb-1 lg:pb-0 rounded-2xl lg:bg-zinc-900/40 lg:border lg:border-zinc-800 lg:p-2 lg:backdrop-blur-sm">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-3 py-2.5 px-4 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab.id
+                        ? 'bg-white text-black shadow-lg shadow-white/10'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                        }`}
+                    >
+                      <tab.icon className="w-4 h-4 shrink-0" />
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </nav>
+
+                <button
+                  onClick={() => router.push('/settings')}
+                  className="hidden lg:flex items-center gap-3 py-2.5 px-4 rounded-xl text-sm font-medium text-zinc-500 hover:text-white hover:bg-zinc-800/60 transition-all w-full"
+                >
+                  <Settings className="w-4 h-4 shrink-0" />
+                  <span>Settings</span>
+                </button>
+              </div>
+            </aside>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-end justify-between mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold text-white">{activeTabMeta?.label}</h2>
+                  <p className="text-sm text-zinc-500 mt-1">PrintsLB Management Console</p>
                 </div>
               </div>
 
-              {/* Tabs */}
-              <div className="flex space-x-1 mb-8 bg-gray-800/50 p-1 rounded-lg backdrop-blur-sm overflow-x-auto">
-                {[
-                  { id: 'overview', label: 'Overview', icon: TrendingUp },
-                  { id: 'materials', label: 'Materials', icon: Package },
-                  { id: 'orders', label: 'Orders', icon: Truck },
-                  { id: 'products', label: 'Products', icon: Image },
-                  { id: 'users', label: 'Users', icon: Users },
-                  { id: 'analytics', label: 'Analytics', icon: BarChart3 }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`flex items-center space-x-2 py-2 px-4 rounded-md font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab.id
-                      ? 'bg-white text-black'
-                      : 'text-zinc-400 hover:text-white'
-                      }`}
-                  >
-                    <tab.icon className="w-4 h-4" />
-                    <span>{tab.label}</span>
-                  </button>
-                ))}
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.25, ease: 'easeOut' }}
+                >
 
               {/* Overview Tab */}
               {activeTab === 'overview' && (
                 <div className="space-y-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                     {statCards.map((stat, index) => (
                       <motion.div
                         key={index}
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: index * 0.1 }}
-                        className="relative overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/50 p-6 backdrop-blur-sm"
+                        transition={{ duration: 0.4, delay: index * 0.08 }}
+                        className="group relative overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 backdrop-blur-sm hover:border-zinc-700 transition-colors"
                       >
-                        <div className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-10`}></div>
+                        <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full bg-gradient-to-br ${stat.color} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity`}></div>
                         <div className="relative">
-                          <div className="flex items-center justify-between mb-4">
-                            <stat.icon className="w-8 h-8 text-white" />
+                          <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-zinc-800/80 border border-zinc-700 mb-5">
+                            <stat.icon className="w-5 h-5 text-white" />
                           </div>
-                          <h3 className="text-gray-400 text-sm mb-1">{stat.title}</h3>
-                          <p className="text-3xl font-bold text-white">{stat.value}</p>
+                          <h3 className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-1.5">{stat.title}</h3>
+                          <p className="text-3xl font-bold text-white tracking-tight">{stat.value}</p>
                         </div>
                       </motion.div>
                     ))}
@@ -801,12 +822,19 @@ export default function AdminPanel() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((product) => (
-                      <div key={product.id} className="border border-gray-800 rounded-lg overflow-hidden bg-gray-800/50">
+                      <div key={product.id} className="border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900/50 hover:border-zinc-700 transition-colors">
                         {product.imageUrl ? (
-                          <img src={product.imageUrl} alt={product.name} className="w-full h-48 object-cover" />
+                          <div className="relative w-full h-48">
+                            <OptimizedImage
+                              src={product.imageUrl}
+                              alt={product.name}
+                              fill
+                              sizes="(max-width: 768px) 100vw, 33vw"
+                            />
+                          </div>
                         ) : (
-                          <div className="w-full h-48 bg-gray-700 flex items-center justify-center">
-                            <Image className="w-12 h-12 text-gray-500" />
+                          <div className="w-full h-48 bg-zinc-800 flex items-center justify-center">
+                            <Image className="w-12 h-12 text-zinc-600" />
                           </div>
                         )}
                         <div className="p-4">
@@ -940,7 +968,7 @@ export default function AdminPanel() {
                           <YAxis stroke="#9CA3AF" fontSize={12} />
                           <Tooltip
                             contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }}
-                            formatter={(value: any) => [`$${Number(value || 0).toFixed(2)}`, 'Revenue']}
+                            formatter={(value) => [`$${Number(value ?? 0).toFixed(2)}`, 'Revenue']}
                           />
                           <Line type="monotone" dataKey="revenue" stroke="#FFFFFF" strokeWidth={3} dot={{ fill: '#FFFFFF', r: 4 }} activeDot={{ r: 6 }} />
                         </LineChart>
@@ -973,9 +1001,11 @@ export default function AdminPanel() {
                   </div>
                 </div>
               )}
-            </motion.div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
-        </section>
+        </div>
       </main>
 
       {/* Add Material Modal */}
