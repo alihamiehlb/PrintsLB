@@ -32,6 +32,20 @@ export default function ProductsPage() {
         fetchProducts()
     }, [])
 
+    // Modal UX: lock body scroll + close on Escape
+    useEffect(() => {
+        if (!selectedProduct) return
+        const onKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') setSelectedProduct(null)
+        }
+        document.body.style.overflow = 'hidden'
+        window.addEventListener('keydown', onKey)
+        return () => {
+            document.body.style.overflow = ''
+            window.removeEventListener('keydown', onKey)
+        }
+    }, [selectedProduct])
+
     const fetchProducts = async () => {
         try {
             const response = await fetch('/api/admin/products')
@@ -166,12 +180,13 @@ Could you please provide more information about this item?`
                                                     .map((product) => (
                                                         <motion.div
                                                             key={product.id}
-                                                            layoutId={`product-${product.id}`}
                                                             onClick={() => setSelectedProduct(product)}
-                                                            initial={{ opacity: 0, scale: 0.95 }}
-                                                            animate={{ opacity: 1, scale: 1 }}
-                                                            whileHover={{ y: -8, scale: 1.02 }}
-                                                            className="group relative bg-zinc-900/40 rounded-3xl border border-zinc-800 overflow-hidden cursor-pointer hover:border-white/50 hover:bg-zinc-800/60 transition-all duration-500 shadow-2xl backdrop-blur-md"
+                                                            initial={{ opacity: 0, y: 16 }}
+                                                            whileInView={{ opacity: 1, y: 0 }}
+                                                            viewport={{ once: true, margin: '-50px' }}
+                                                            transition={{ duration: 0.4, ease: 'easeOut' }}
+                                                            whileHover={{ y: -6 }}
+                                                            className="group relative bg-zinc-900/40 rounded-3xl border border-zinc-800 overflow-hidden cursor-pointer hover:border-white/50 hover:bg-zinc-800/60 transition-colors duration-300 shadow-2xl backdrop-blur-md"
                                                         >
                                                             <div className="aspect-square relative overflow-hidden">
                                                                 {product.imageUrl || product.webpUrl ? (
@@ -223,56 +238,63 @@ Could you please provide more information about this item?`
             {/* Product Details Modal */}
             <AnimatePresence>
                 {selectedProduct && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
+                    <motion.div
+                        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={selectedProduct.name}
+                    >
+                        <div
                             onClick={() => setSelectedProduct(null)}
-                            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
                         />
 
                         <motion.div
-                            layoutId={`product-${selectedProduct.id}`}
-                            className="relative w-full max-w-4xl bg-gray-900 rounded-3xl md:rounded-[2.5rem] border border-gray-800 overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[95vh] md:max-h-none overflow-y-auto md:overflow-visible"
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="relative w-full max-w-4xl bg-gray-900 rounded-3xl md:rounded-[2.5rem] border border-gray-800 overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[92vh] overflow-y-auto"
+                            initial={{ scale: 0.96, opacity: 0, y: 12 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.97, opacity: 0, y: 8 }}
+                            transition={{ type: 'spring', stiffness: 320, damping: 30 }}
                         >
                             <button
                                 onClick={() => setSelectedProduct(null)}
-                                className="absolute top-6 right-6 z-10 p-2 bg-black/40 hover:bg-black/60 rounded-full text-white/70 hover:text-white transition-all backdrop-blur-md"
+                                aria-label="Close"
+                                className="absolute top-5 right-5 z-10 p-2 bg-black/50 hover:bg-black/70 rounded-full text-white/80 hover:text-white transition-colors backdrop-blur-md"
                             >
                                 <X className="w-6 h-6" />
                             </button>
 
                             {/* Image Section */}
-                            <div className="w-full md:w-1/2 h-64 sm:h-80 md:h-auto relative shrink-0">
-                                {selectedProduct.imageUrl ? (
-                                    <motion.img
-                                        initial={{ scale: 1.2, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        transition={{ duration: 0.8 }}
-                                        src={selectedProduct.imageUrl}
+                            <div className="w-full md:w-1/2 aspect-square md:aspect-auto relative shrink-0 bg-zinc-950">
+                                {selectedProduct.imageUrl || selectedProduct.webpUrl ? (
+                                    <OptimizedImage
+                                        src={selectedProduct.imageUrl || selectedProduct.webpUrl || ''}
+                                        webpSrc={selectedProduct.webpUrl}
                                         alt={selectedProduct.name}
-                                        className="w-full h-full object-cover"
+                                        fill
+                                        priority
+                                        sizes="(max-width: 768px) 100vw, 50vw"
                                     />
                                 ) : (
-                                    <div className="w-full h-full bg-gray-800 flex items-center justify-center">
+                                    <div className="w-full h-full min-h-[16rem] bg-gray-800 flex items-center justify-center">
                                         <Package className="w-20 md:w-32 h-20 md:h-32 text-gray-700" />
                                     </div>
                                 )}
                             </div>
 
                             {/* Content Section */}
-                            <div className="w-full md:w-1/2 p-8 sm:p-12 flex flex-col justify-between bg-gradient-to-br from-zinc-950 to-black">
+                            <motion.div
+                                className="w-full md:w-1/2 p-8 sm:p-10 flex flex-col justify-between bg-gradient-to-br from-zinc-950 to-black"
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.1, duration: 0.3 }}
+                            >
                                 <div>
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.3 }}
-                                        className="flex items-center space-x-3 mb-4"
-                                    >
+                                    <div className="flex items-center space-x-3 mb-4">
                                         <span className="px-4 py-1 bg-white/10 border border-white/20 text-white rounded-full text-xs font-bold uppercase tracking-widest">
                                             {selectedProduct.category || 'Collection'}
                                         </span>
@@ -283,45 +305,25 @@ Could you please provide more information about this item?`
                                         ) : (
                                             <span className="text-xs text-orange-400 font-medium">Made to order</span>
                                         )}
-                                    </motion.div>
+                                    </div>
 
-                                    <motion.h2
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.4 }}
-                                        className="text-3xl md:text-4xl font-extrabold text-white mb-6 leading-tight"
-                                    >
+                                    <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-4 leading-tight">
                                         {selectedProduct.name}
-                                    </motion.h2>
+                                    </h2>
 
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.5 }}
-                                        className="text-3xl font-black text-white mb-8"
-                                    >
+                                    <div className="text-3xl font-black text-white mb-8">
                                         ${selectedProduct.price.toFixed(2)}
-                                    </motion.div>
+                                    </div>
 
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: 0.6 }}
-                                        className="prose prose-invert max-w-none mb-10"
-                                    >
+                                    <div className="max-w-none mb-10">
                                         <h4 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-3">Description</h4>
                                         <p className="text-gray-300 leading-relaxed text-sm md:text-base">
                                             {selectedProduct.description || 'This premium 3D printed model is crafted with precision and high-quality materials. Perfect for collectors, décor, or functional use.'}
                                         </p>
-                                    </motion.div>
+                                    </div>
                                 </div>
 
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.7 }}
-                                    className="space-y-4"
-                                >
+                                <div className="space-y-4">
                                     <button
                                         onClick={() => handleWhatsAppInquiry(selectedProduct)}
                                         className="w-full flex items-center justify-center space-x-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-400 hover:to-green-500 text-white font-bold py-5 px-8 rounded-2xl shadow-xl shadow-green-900/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
@@ -333,10 +335,10 @@ Could you please provide more information about this item?`
                                     <p className="text-center text-xs text-gray-500">
                                         Secure payment upon delivery or OMT. Ships within 2-3 business days.
                                     </p>
-                                </motion.div>
-                            </div>
+                                </div>
+                            </motion.div>
                         </motion.div>
-                    </div>
+                    </motion.div>
                 )}
             </AnimatePresence>
 

@@ -29,14 +29,19 @@ export function OptimizedImage({
   sizes = '(max-width: 768px) 100vw, 33vw',
 }: OptimizedImageProps) {
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  // When the Next optimizer can't handle a host, fall back to a native <img>
+  // so the picture still renders instead of showing "unavailable".
+  const [useNative, setUseNative] = useState(false)
+  const [hardError, setHardError] = useState(false)
+
   const imageSrc = webpSrc || src
 
-  if (error) {
+  if (hardError) {
     return (
       <div
         className={cn(
-          'flex items-center justify-center bg-zinc-900 text-zinc-500 text-sm',
+          'flex items-center justify-center bg-zinc-900 text-zinc-600 text-sm',
+          fill && 'w-full h-full',
           className
         )}
       >
@@ -50,29 +55,45 @@ export function OptimizedImage({
       {loading && (
         <Skeleton className={cn('absolute inset-0 z-10', fill ? 'w-full h-full' : '')} />
       )}
-      <Image
-        src={imageSrc}
-        alt={alt}
-        width={fill ? undefined : width ?? 400}
-        height={fill ? undefined : height ?? 400}
-        fill={fill}
-        sizes={sizes}
-        priority={priority}
-        className={cn(
-          'object-cover transition-opacity duration-300',
-          loading ? 'opacity-0' : 'opacity-100'
-        )}
-        onLoad={() => setLoading(false)}
-        onError={() => {
-          if (webpSrc && imageSrc === webpSrc) {
-            setError(false)
-            // fallback handled by using src on retry — parent should pass both
-          } else {
-            setError(true)
+
+      {useNative ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={imageSrc}
+          alt={alt}
+          loading={priority ? 'eager' : 'lazy'}
+          decoding="async"
+          className={cn(
+            'transition-opacity duration-300',
+            fill ? 'absolute inset-0 h-full w-full object-cover' : 'object-cover',
+            loading ? 'opacity-0' : 'opacity-100'
+          )}
+          onLoad={() => setLoading(false)}
+          onError={() => {
+            setHardError(true)
             setLoading(false)
-          }
-        }}
-      />
+          }}
+        />
+      ) : (
+        <Image
+          src={imageSrc}
+          alt={alt}
+          width={fill ? undefined : width ?? 400}
+          height={fill ? undefined : height ?? 400}
+          fill={fill}
+          sizes={sizes}
+          priority={priority}
+          className={cn(
+            'object-cover transition-opacity duration-300',
+            loading ? 'opacity-0' : 'opacity-100'
+          )}
+          onLoad={() => setLoading(false)}
+          onError={() => {
+            // Optimizer failed for this host — retry with a native <img>.
+            setUseNative(true)
+          }}
+        />
+      )}
     </div>
   )
 }
