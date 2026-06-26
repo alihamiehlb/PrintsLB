@@ -273,12 +273,12 @@ export default function UploadPage() {
                 onExpire={() => setTurnstileToken('')}
               />
               <button
-              onClick={handleOrder}
-              disabled={isPlacingOrder || !phoneNumber || (TURNSTILE_ENABLED && !turnstileToken)}
-              className="w-full rounded-xl bg-white py-4 font-bold text-black shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] disabled:opacity-50 transition-all active:scale-[0.98]"
-            >
-              {isPlacingOrder ? 'Processing...' : 'Place Order & Send via WhatsApp'}
-            </button>
+                onClick={handleOrder}
+                disabled={isPlacingOrder || !phoneNumber || (TURNSTILE_ENABLED && !turnstileToken)}
+                className="w-full rounded-xl bg-white py-4 font-bold text-black shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] disabled:opacity-50 transition-all active:scale-[0.98]"
+              >
+                {isPlacingOrder ? 'Processing...' : 'Place Order & Send via WhatsApp'}
+              </button>
             </div>
           )}
 

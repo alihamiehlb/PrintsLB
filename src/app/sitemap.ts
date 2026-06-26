@@ -1,19 +1,13 @@
 import { MetadataRoute } from 'next'
+import { PUBLIC_PAGES, absoluteUrl } from '@/lib/site'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    return [
-        {
-            url: 'https://printslb.com',
-            lastModified: new Date(),
-            changeFrequency: 'monthly',
-            priority: 1,
-        },
-        // Add other routes here if needed, e.g.:
-        // {
-        //   url: 'https://printslb.com/track',
-        //   lastModified: new Date(),
-        //   changeFrequency: 'weekly',
-        //   priority: 0.8,
-        // },
-    ]
+  const now = new Date()
+
+  return PUBLIC_PAGES.map((page) => ({
+    url: absoluteUrl(page.path),
+    lastModified: now,
+    changeFrequency: page.path === '/' ? 'weekly' : 'monthly',
+    priority: page.path === '/' ? 1 : page.path === '/upload' ? 0.9 : 0.7,
+  }))
 }

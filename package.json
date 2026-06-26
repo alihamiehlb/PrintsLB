@@ -16,6 +16,7 @@
     "db:d1:schema": "wrangler d1 execute printslb-db --remote --file=./prisma/d1-schema.sql --yes",
     "db:d1:import": "wrangler d1 execute printslb-db --remote --file=./prisma/d1-data.sql --yes",
     "db:d1:verify": "wrangler d1 execute printslb-db --remote --file=./prisma/d1-verify.sql --yes",
+    "cf:security": "node scripts/setup-cloudflare-security.mjs",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"

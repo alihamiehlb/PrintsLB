@@ -97,6 +97,6 @@ export function middleware(req: NextRequest) {
 export const config = {
   // Run on everything except static assets and the optimizer.
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|hero-video.mp4|hero-poster.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|llms.txt|robots.txt|sitemap.xml|hero-video.mp4|hero-poster.svg|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm|txt)$).*)',
   ],
 }

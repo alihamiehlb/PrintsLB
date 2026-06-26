@@ -26,7 +26,8 @@
     }
   ],
   "vars": {
-    "NEXTAUTH_URL": "https://printslb.com"
+    "NEXTAUTH_URL": "https://printslb.com",
+    "NEXT_PUBLIC_SITE_URL": "https://printslb.com"
   },
   // Custom domain. Requires the zone "printslb.com" to be ACTIVE on this
   // Cloudflare account (add the site in the dashboard + point the registrar
