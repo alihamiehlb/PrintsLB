@@ -10,18 +10,28 @@ import { checkRateLimit, getClientIp, type RateLimitRule } from '@/lib/rate-limi
  */
 
 // Stricter budgets for sensitive endpoints, looser for general browsing.
-const AUTH_RULE: RateLimitRule = { limit: 10, windowMs: 60_000, banThreshold: 5, banMs: 15 * 60_000 }
-const API_RULE: RateLimitRule = { limit: 60, windowMs: 60_000, banThreshold: 8, banMs: 10 * 60_000 }
-const PAGE_RULE: RateLimitRule = { limit: 200, windowMs: 60_000, banThreshold: 10, banMs: 5 * 60_000 }
+// NOTE: limits are per-isolate (see rate-limit.ts) and act as a second line of
+// defense behind the Cloudflare WAF, so they're deliberately generous to avoid
+// false positives during normal browsing (NextAuth polls /api/auth/session on
+// every page + window focus).
+const LOGIN_RULE: RateLimitRule = { limit: 20, windowMs: 60_000, banThreshold: 12, banMs: 10 * 60_000 }
+const API_RULE: RateLimitRule = { limit: 200, windowMs: 60_000, banThreshold: 25, banMs: 5 * 60_000 }
+const PAGE_RULE: RateLimitRule = { limit: 400, windowMs: 60_000, banThreshold: 25, banMs: 5 * 60_000 }
+
+// Only genuine credential-submission endpoints get the strict budget. NextAuth
+// housekeeping (session/csrf/providers/_log/error) is polled frequently and must
+// NOT be treated as a login attempt, or normal users get banned instantly.
+function isLoginSubmission(pathname: string): boolean {
+  return (
+    pathname.startsWith('/api/auth/callback/credentials') ||
+    pathname.startsWith('/api/auth/register') ||
+    pathname.startsWith('/api/auth/signup')
+  )
+}
 
 function ruleFor(pathname: string): { rule: RateLimitRule; bucket: string } {
-  if (
-    pathname.startsWith('/api/auth') ||
-    pathname.startsWith('/api/admin') ||
-    pathname.includes('/register') ||
-    pathname.includes('/signin')
-  ) {
-    return { rule: AUTH_RULE, bucket: 'auth' }
+  if (isLoginSubmission(pathname)) {
+    return { rule: LOGIN_RULE, bucket: 'login' }
   }
   if (pathname.startsWith('/api')) {
     return { rule: API_RULE, bucket: 'api' }
