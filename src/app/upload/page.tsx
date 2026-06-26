@@ -8,6 +8,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Upload, File, ShoppingBag, CheckCircle, CheckCircle2, AlertCircle, Settings, Info, X, Package, ArrowRight, MessageCircle, Clock } from 'lucide-react'
 import { WhatsAppService } from '@/lib/whatsapp'
+import { TurnstileWidget, TURNSTILE_ENABLED } from '@/components/turnstile-widget'
 
 interface Material {
   id: string
@@ -33,6 +34,7 @@ export default function UploadPage() {
   const [orderId, setOrderId] = useState('')
   const [isLargeFile, setIsLargeFile] = useState(false)
   const [whatsappSent, setWhatsappSent] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
 
   const [materials] = useState<Material[]>([
     { id: '1', name: 'PLA', color: 'White', pricePerGram: 0.025, available: true },
@@ -126,7 +128,8 @@ export default function UploadPage() {
           totalPrice: 0, // Manual pricing later
           customerNotes,
           phoneNumber,
-          fileUrl
+          fileUrl,
+          turnstileToken,
         })
       })
 
@@ -264,13 +267,19 @@ export default function UploadPage() {
           {error && <p className="mb-4 text-sm text-red-500 bg-red-500/10 p-3 rounded-lg flex items-center"><AlertCircle className="w-4 h-4 mr-2" /> {error}</p>}
 
           {file && selectedMaterial && (
-            <button
+            <div className="space-y-4">
+              <TurnstileWidget
+                onVerify={setTurnstileToken}
+                onExpire={() => setTurnstileToken('')}
+              />
+              <button
               onClick={handleOrder}
-              disabled={isPlacingOrder || !phoneNumber}
+              disabled={isPlacingOrder || !phoneNumber || (TURNSTILE_ENABLED && !turnstileToken)}
               className="w-full rounded-xl bg-white py-4 font-bold text-black shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.25)] disabled:opacity-50 transition-all active:scale-[0.98]"
             >
               {isPlacingOrder ? 'Processing...' : 'Place Order & Send via WhatsApp'}
             </button>
+            </div>
           )}
 
           {/* Success UI */}

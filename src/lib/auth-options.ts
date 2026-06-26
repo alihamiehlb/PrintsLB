@@ -4,6 +4,7 @@ import GoogleProvider from 'next-auth/providers/google'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import { verifyPassword } from '@/lib/auth'
+import { verifyTurnstileToken, isTurnstileConfigured } from '@/lib/turnstile'
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -22,10 +23,18 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        turnstileToken: { label: 'Turnstile', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null
+        }
+
+        if (isTurnstileConfigured()) {
+          const captcha = await verifyTurnstileToken(credentials.turnstileToken)
+          if (!captcha.ok) {
+            return null
+          }
         }
 
         const user = await prisma.user.findUnique({

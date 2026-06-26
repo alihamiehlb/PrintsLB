@@ -2,10 +2,27 @@ import { parseJsonBody } from '@/lib/json'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
+import { verifyTurnstileToken, isTurnstileConfigured } from '@/lib/turnstile'
+import { getClientIp } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await parseJsonBody<{ name: string; email: string; password: string }>(request)
+    const { name, email, password, turnstileToken } = await parseJsonBody<{
+      name: string
+      email: string
+      password: string
+      turnstileToken?: string
+    }>(request)
+
+    if (isTurnstileConfigured()) {
+      const captcha = await verifyTurnstileToken(
+        turnstileToken,
+        getClientIp(request.headers)
+      )
+      if (!captcha.ok) {
+        return NextResponse.json({ error: captcha.error }, { status: 400 })
+      }
+    }
 
     if (!name || !email || !password) {
       return NextResponse.json(

@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-options'
 import { parseJsonBody } from '@/lib/json'
 import { prisma } from '@/lib/prisma'
+import { verifyTurnstileToken, isTurnstileConfigured } from '@/lib/turnstile'
+import { getClientIp } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +23,18 @@ export async function POST(request: NextRequest) {
       customerNotes?: string
       fileUrl?: string
       phoneNumber?: string
+      turnstileToken?: string
     }>(request)
+
+    if (isTurnstileConfigured()) {
+      const captcha = await verifyTurnstileToken(
+        data.turnstileToken,
+        getClientIp(request.headers)
+      )
+      if (!captcha.ok) {
+        return NextResponse.json({ error: captcha.error }, { status: 400 })
+      }
+    }
 
     // Find user
     const user = await prisma.user.findUnique({

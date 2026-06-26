@@ -8,12 +8,14 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { GoogleSignInButton, AuthDivider } from '@/components/google-sign-in-button'
 import { CtaButton } from '@/components/ui/cta-button'
+import { TurnstileWidget, TURNSTILE_ENABLED } from '@/components/turnstile-widget'
 
 export default function SignUp() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -38,7 +40,7 @@ export default function SignUp() {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, turnstileToken }),
       })
 
       if (response.ok) {
@@ -147,7 +149,12 @@ export default function SignUp() {
                 />
               </div>
 
-              <CtaButton type="submit" variant="primary" className="w-full" disabled={loading}>
+              <TurnstileWidget
+                onVerify={setTurnstileToken}
+                onExpire={() => setTurnstileToken('')}
+              />
+
+              <CtaButton type="submit" variant="primary" className="w-full" disabled={loading || (TURNSTILE_ENABLED && !turnstileToken)}>
                 {loading ? 'Creating account...' : 'Sign Up'}
               </CtaButton>
             </form>

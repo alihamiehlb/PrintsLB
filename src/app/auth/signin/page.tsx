@@ -10,10 +10,12 @@ import { Footer } from '@/components/footer'
 import { AuthGuard } from '@/components/auth-guard'
 import { GoogleSignInButton, AuthDivider } from '@/components/google-sign-in-button'
 import { CtaButton } from '@/components/ui/cta-button'
+import { TurnstileWidget, TURNSTILE_ENABLED } from '@/components/turnstile-widget'
 
 export default function SignIn() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -27,6 +29,7 @@ export default function SignIn() {
       const result = await signIn('credentials', {
         email,
         password,
+        turnstileToken,
         redirect: false,
       })
 
@@ -103,7 +106,12 @@ export default function SignIn() {
                   />
                 </div>
 
-                <CtaButton type="submit" variant="primary" className="w-full" disabled={loading}>
+                <TurnstileWidget
+                  onVerify={setTurnstileToken}
+                  onExpire={() => setTurnstileToken('')}
+                />
+
+                <CtaButton type="submit" variant="primary" className="w-full" disabled={loading || (TURNSTILE_ENABLED && !turnstileToken)}>
                   {loading ? 'Signing in...' : 'Sign In'}
                 </CtaButton>
               </form>
