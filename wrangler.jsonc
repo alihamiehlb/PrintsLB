@@ -29,15 +29,10 @@
     "NEXTAUTH_URL": "https://printslb.com",
     "NEXT_PUBLIC_SITE_URL": "https://printslb.com"
   },
-  // Custom domain. Requires the zone "printslb.com" to be ACTIVE on this
-  // Cloudflare account (add the site in the dashboard + point the registrar
-  // nameservers to Cloudflare). Once the zone is active, uncomment the routes
-  // below and run `npm run deploy` (or push to trigger CI) to attach the
-  // custom domain + TLS automatically.
-  // "routes": [
-  //   { "pattern": "printslb.com", "custom_domain": true },
-  //   { "pattern": "www.printslb.com", "custom_domain": true }
-  // ],
+  "routes": [
+    { "pattern": "printslb.com", "custom_domain": true },
+    { "pattern": "www.printslb.com", "custom_domain": true }
+  ],
   "observability": {
     "enabled": true
   },

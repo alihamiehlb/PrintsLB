@@ -79,12 +79,31 @@ function applySecurityHeaders(res: NextResponse): NextResponse {
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+
+  // Never rate-limit the branded block page itself.
+  if (pathname === '/blocked') {
+    return applySecurityHeaders(NextResponse.next())
+  }
+
   const ip = getClientIp(req.headers)
   const { rule, bucket } = ruleFor(pathname)
 
   const result = checkRateLimit(ip, rule, bucket)
 
   if (!result.allowed) {
+    const accept = req.headers.get('accept') ?? ''
+    const wantsHtml = accept.includes('text/html') && !pathname.startsWith('/api')
+
+    if (wantsHtml) {
+      const url = req.nextUrl.clone()
+      url.pathname = '/blocked'
+      url.searchParams.set('reason', result.banned ? 'banned' : 'rate')
+      url.searchParams.set('retry', String(result.retryAfter))
+      const res = NextResponse.redirect(url, { status: result.banned ? 403 : 429 })
+      res.headers.set('Retry-After', String(result.retryAfter))
+      return applySecurityHeaders(res)
+    }
+
     const res = NextResponse.json(
       {
         error: result.banned ? 'Access temporarily blocked' : 'Too many requests',
