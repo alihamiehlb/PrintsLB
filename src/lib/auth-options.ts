@@ -8,7 +8,8 @@ import { verifyTurnstileToken, isTurnstileConfigured } from '@/lib/turnstile'
 import { hasTurnstileClearance } from '@/lib/turnstile-clearance'
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // Remove PrismaAdapter when using JWT strategy to avoid conflicts
+  // adapter: PrismaAdapter(prisma),
   get providers() {
     return [
       ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
@@ -74,14 +75,57 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async signIn({ user, account }) {
+    async signIn({ user, account, profile }) {
       if (!user?.email) {
         return false
       }
 
-      // Allow all Google sign-ins - the adapter will handle user creation/account linking
+      // For Google sign-in, ensure user exists in database
       if (account?.provider === 'google') {
-        return true
+        try {
+          let dbUser = await prisma.user.findUnique({
+            where: { email: user.email },
+          })
+
+          if (!dbUser) {
+            // Create new user if doesn't exist
+            dbUser = await prisma.user.create({
+              data: {
+                email: user.email,
+                name: user.name || profile?.name || 'Google User',
+                role: 'USER',
+              },
+            })
+          }
+
+          // Create account record for Google if it doesn't exist
+          const existingAccount = await prisma.account.findFirst({
+            where: {
+              userId: dbUser.id,
+              provider: 'google',
+            },
+          })
+
+          if (!existingAccount) {
+            await prisma.account.create({
+              data: {
+                userId: dbUser.id,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                access_token: account.access_token,
+                refresh_token: account.refresh_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+              },
+            })
+          }
+        } catch (error) {
+          console.error('Error in Google signIn callback:', error)
+          // Don't block sign-in on database errors
+        }
       }
 
       return true
