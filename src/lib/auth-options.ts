@@ -122,6 +122,10 @@ export const authOptions: NextAuthOptions = {
               },
             })
           }
+
+          // Update user object with database role
+          user.role = dbUser.role
+          user.id = dbUser.id
         } catch (error) {
           console.error('Error in Google signIn callback:', error)
           // Don't block sign-in on database errors
