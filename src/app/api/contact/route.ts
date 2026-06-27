@@ -1,9 +1,10 @@
 import { parseJsonBody } from '@/lib/json'
 import { NextRequest, NextResponse } from 'next/server'
+import { sanitizeText, sanitizeEmail } from '@/lib/sanitize'
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, phone, service, message } = await parseJsonBody<{
+    const data = await parseJsonBody<{
       name: string
       email: string
       phone?: string
@@ -11,9 +12,23 @@ export async function POST(request: NextRequest) {
       message: string
     }>(request)
 
+    // Sanitize inputs
+    const name = sanitizeText(data.name || '')
+    const email = sanitizeEmail(data.email || '')
+    const phone = sanitizeText(data.phone || '')
+    const service = sanitizeText(data.service || '')
+    const message = sanitizeText(data.message || '')
+
     if (!name || !email || !message) {
       return NextResponse.json(
         { error: 'Missing required fields' },
+        { status: 400 }
+      )
+    }
+
+    if (!email) {
+      return NextResponse.json(
+        { error: 'Invalid email address' },
         { status: 400 }
       )
     }

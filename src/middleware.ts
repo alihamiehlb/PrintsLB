@@ -41,15 +41,16 @@ function ruleFor(pathname: string): { rule: RateLimitRule; bucket: string } {
 
 // Content-Security-Policy. Allows: self, Google OAuth/Analytics, R2/CDN images,
 // inline styles (required by Tailwind/Next), and blob/data for media + canvas.
+// Tightened for better XSS protection
 const CSP = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://accounts.google.com https://challenges.cloudflare.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://accounts.google.com https://challenges.cloudflare.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
+  "img-src 'self' data: blob: https: http:",
   "media-src 'self' blob: https:",
   "font-src 'self' data:",
   "connect-src 'self' https://www.google-analytics.com https://accounts.google.com https://challenges.cloudflare.com",
@@ -74,6 +75,9 @@ function applySecurityHeaders(res: NextResponse): NextResponse {
     'Strict-Transport-Security',
     'max-age=63072000; includeSubDomains; preload'
   )
+  // Additional security headers
+  res.headers.set('X-XSS-Protection', '1; mode=block')
+  res.headers.set('Cross-Origin-Embedder-Policy', 'require-corp')
   return res
 }
 

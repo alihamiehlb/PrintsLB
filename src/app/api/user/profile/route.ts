@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-options'
 import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
+import { sanitizeText } from '@/lib/sanitize'
 
 export async function PUT(request: NextRequest) {
     try {
@@ -16,7 +17,7 @@ export async function PUT(request: NextRequest) {
         const { name, password } = await parseJsonBody<{ name?: string; password?: string }>(request)
 
         const updateData: { name?: string; password?: string } = {}
-        if (name) updateData.name = name
+        if (name) updateData.name = sanitizeText(name)
         if (password) {
             updateData.password = await hashPassword(password)
         }

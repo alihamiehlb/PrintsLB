@@ -5,6 +5,7 @@ import { parseJsonBody } from '@/lib/json'
 import { prisma } from '@/lib/prisma'
 import { verifyTurnstileToken, isTurnstileConfigured } from '@/lib/turnstile'
 import { getClientIp } from '@/lib/rate-limit'
+import { sanitizeText } from '@/lib/sanitize'
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,6 +26,12 @@ export async function POST(request: NextRequest) {
       phoneNumber?: string
       turnstileToken?: string
     }>(request)
+
+    // Sanitize text inputs
+    const materialName = sanitizeText(data.materialName || '')
+    const fileName = sanitizeText(data.fileName || '')
+    const customerNotes = sanitizeText(data.customerNotes || '')
+    const phoneNumber = sanitizeText(data.phoneNumber || '')
 
     if (isTurnstileConfigured()) {
       const captcha = await verifyTurnstileToken(
@@ -47,11 +54,11 @@ export async function POST(request: NextRequest) {
 
     // Find material based on name
     const material = await prisma.material.findFirst({
-      where: { name: data.materialName }
+      where: { name: materialName }
     })
 
     if (!material) {
-      return NextResponse.json({ error: 'Material not found: ' + data.materialName }, { status: 400 })
+      return NextResponse.json({ error: 'Material not found: ' + materialName }, { status: 400 })
     }
 
     // 1. Create PrintJob first
@@ -59,7 +66,7 @@ export async function POST(request: NextRequest) {
       data: {
         userId: user.id,
         materialId: material.id,
-        fileName: data.fileName,
+        fileName: fileName,
         fileSize: data.fileSize,
         printTime: 0,
         materialUsed: data.materialUsed || 0,
@@ -67,7 +74,7 @@ export async function POST(request: NextRequest) {
         profit: 2.50,
         totalPrice: Number(data.totalPrice),
         status: 'PENDING',
-        notes: data.customerNotes
+        notes: customerNotes
       }
     })
 
@@ -77,9 +84,9 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         status: 'PENDING',
         totalAmount: Number(data.totalPrice),
-        notes: data.customerNotes || '',
+        notes: customerNotes,
         fileUrl: data.fileUrl,
-        phoneNumber: data.phoneNumber,
+        phoneNumber: phoneNumber,
         printJobId: printJob.id,
         tracking: {
           create: {
