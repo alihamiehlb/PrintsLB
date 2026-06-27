@@ -38,6 +38,7 @@ export async function PUT(
 
     return NextResponse.json(material)
   } catch (error) {
+    console.error('Error updating material:', error)
     return NextResponse.json({ error: 'Failed to update material' }, { status: 500 })
   }
 }

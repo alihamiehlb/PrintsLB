@@ -75,33 +75,39 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === 'google' && user.email) {
-        const existing = await prisma.user.findUnique({
-          where: { email: user.email },
-          include: { accounts: true },
-        })
-        if (existing && !existing.accounts.some((a) => a.provider === 'google')) {
-          if (existing.password) {
-            return true
-          }
-        }
+      if (!user?.email) {
+        return false
       }
+
+      // Allow all Google sign-ins - the adapter will handle user creation/account linking
+      if (account?.provider === 'google') {
+        return true
+      }
+
       return true
     },
     async jwt({ token, user, account }) {
+      // Initial sign in - add user info to token
       if (user) {
         token.role = (user as { role?: string }).role ?? 'USER'
         token.id = user.id
       }
+
+      // For Google provider, ensure we have the latest user data from DB
       if (account?.provider === 'google' && token.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email as string },
-        })
-        if (dbUser) {
-          token.role = dbUser.role
-          token.id = dbUser.id
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email as string },
+          })
+          if (dbUser) {
+            token.role = dbUser.role
+            token.id = dbUser.id
+          }
+        } catch (error) {
+          console.error('Error fetching user in JWT callback:', error)
         }
       }
+
       return token
     },
     async session({ session, token }) {

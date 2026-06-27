@@ -15,7 +15,7 @@ export async function PUT(request: NextRequest) {
 
         const { name, password } = await parseJsonBody<{ name?: string; password?: string }>(request)
 
-        const updateData: any = {}
+        const updateData: { name?: string; password?: string } = {}
         if (name) updateData.name = name
         if (password) {
             updateData.password = await hashPassword(password)

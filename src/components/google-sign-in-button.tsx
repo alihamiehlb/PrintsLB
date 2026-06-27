@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { motion } from 'framer-motion'
 
@@ -10,7 +10,12 @@ export function GoogleSignInButton({ label = 'Continue with Google' }: { label?:
   const handleClick = async () => {
     setLoading(true)
     try {
-      await signIn('google', { callbackUrl: '/dashboard' })
+      const result = await signIn('google', { callbackUrl: '/dashboard' })
+      if (result?.error) {
+        console.error('Google sign-in error:', result.error)
+      }
+    } catch (error) {
+      console.error('Google sign-in failed:', error)
     } finally {
       setLoading(false)
     }
