@@ -107,7 +107,7 @@ export default function FAQPage() {
                     >
                         <div className="p-12 rounded-3xl border border-zinc-800 bg-zinc-950 backdrop-blur-sm">
                             <h2 className="text-3xl font-bold text-white mb-4">Still have questions?</h2>
-                            <p className="text-gray-300 mb-8">Can't find the answer you're looking for? Reach out to our human support team directly.</p>
+                            <p className="text-gray-300 mb-8">Can&apos;t find the answer you&apos;re looking for? Reach out to our human support team directly.</p>
                             <a
                                 href="https://wa.me/96176696385"
                                 target="_blank"

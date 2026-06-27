@@ -54,7 +54,7 @@ export default function ContactPage() {
                         </h1>
                         <p className="text-xl text-gray-400 max-w-2xl mx-auto">
                             Have a specialized print request or need technical advice?
-                            We're here to help you bring your ideas to life.
+                            We&apos;re here to help you bring your ideas to life.
                         </p>
                     </motion.div>
 

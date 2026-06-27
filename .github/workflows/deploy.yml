@@ -1,7 +1,7 @@
 name: Deploy to Cloudflare
 
 # Deploys only after a manual trigger OR a push to main that already passed CI.
-# Manual dispatch keeps you in control (no surprise production deploys).
+# Use the GitHub `production` environment if you want a manual approval gate.
 on:
   workflow_dispatch:
   workflow_run:
@@ -36,6 +36,21 @@ jobs:
 
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
+
+      - name: Validate required deployment secrets
+        shell: bash
+        run: |
+          missing=0
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is not configured in GitHub repository or environment secrets"
+              missing=1
+            fi
+          done
+          exit "$missing"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Deploy with OpenNext to Cloudflare Workers
         run: npx opennextjs-cloudflare build && npx opennextjs-cloudflare deploy

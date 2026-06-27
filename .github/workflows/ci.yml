@@ -25,6 +25,8 @@ jobs:
       DATABASE_URL: "file:./ci.db"
       NEXTAUTH_SECRET: "ci-placeholder-secret-not-used-in-production"
       NEXTAUTH_URL: "http://localhost:3000"
+      GOOGLE_CLIENT_ID: "ci-placeholder.apps.googleusercontent.com"
+      GOOGLE_CLIENT_SECRET: "ci-placeholder-secret"
       SKIP_ENV_VALIDATION: "true"
     steps:
       - uses: actions/checkout@v4

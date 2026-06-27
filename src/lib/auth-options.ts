@@ -5,64 +5,70 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import { verifyPassword } from '@/lib/auth'
 import { verifyTurnstileToken, isTurnstileConfigured } from '@/lib/turnstile'
+import { hasTurnstileClearance } from '@/lib/turnstile-clearance'
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  providers: [
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? [
-          GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            allowDangerousEmailAccountLinking: false,
-          }),
-        ]
-      : []),
-    CredentialsProvider({
-      name: 'credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-        turnstileToken: { label: 'Turnstile', type: 'text' },
-      },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null
-        }
-
-        if (isTurnstileConfigured()) {
-          const captcha = await verifyTurnstileToken(credentials.turnstileToken)
-          if (!captcha.ok) {
+  get providers() {
+    return [
+      ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+        ? [
+            GoogleProvider({
+              clientId: process.env.GOOGLE_CLIENT_ID,
+              clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+              allowDangerousEmailAccountLinking: true,
+            }),
+          ]
+        : []),
+      CredentialsProvider({
+        name: 'credentials',
+        credentials: {
+          email: { label: 'Email', type: 'email' },
+          password: { label: 'Password', type: 'password' },
+          turnstileToken: { label: 'Turnstile', type: 'text' },
+        },
+        async authorize(credentials, request) {
+          if (!credentials?.email || !credentials?.password) {
             return null
           }
-        }
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-        })
+          if (
+            isTurnstileConfigured() &&
+            !(await hasTurnstileClearance(request))
+          ) {
+            const captcha = await verifyTurnstileToken(credentials.turnstileToken)
+            if (!captcha.ok) {
+              return null
+            }
+          }
 
-        if (!user?.password) {
-          return null
-        }
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+          })
 
-        const isPasswordValid = await verifyPassword(
-          credentials.password,
-          user.password
-        )
+          if (!user?.password) {
+            return null
+          }
 
-        if (!isPasswordValid) {
-          return null
-        }
+          const isPasswordValid = await verifyPassword(
+            credentials.password,
+            user.password
+          )
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        }
-      },
-    }),
-  ],
+          if (!isPasswordValid) {
+            return null
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          }
+        },
+      }),
+    ]
+  },
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -109,5 +115,7 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/auth/signin',
   },
-  secret: process.env.NEXTAUTH_SECRET,
+  get secret() {
+    return process.env.NEXTAUTH_SECRET
+  },
 }

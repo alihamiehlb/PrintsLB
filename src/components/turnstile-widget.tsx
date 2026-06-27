@@ -56,13 +56,34 @@ export function TurnstileWidget({
   const [sessionReuse, setSessionReuse] = useState(false)
   const reactId = useId()
 
+  const callbacksRef = useRef({ onVerify, onExpire, onError })
+  useEffect(() => {
+    callbacksRef.current = { onVerify, onExpire, onError }
+  }, [onVerify, onExpire, onError])
+
   const handleVerify = useCallback(
-    (token: string) => {
-      setTurnstileSession(token)
-      setPhase('verified')
-      onVerify(token)
+    async (token: string) => {
+      try {
+        const response = await fetch('/api/security/turnstile-clearance', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token }),
+        })
+
+        if (!response.ok) {
+          throw new Error('Turnstile clearance failed')
+        }
+
+        setTurnstileSession(token)
+        setPhase('verified')
+        callbacksRef.current.onVerify(token)
+      } catch {
+        clearTurnstileSession()
+        setPhase('error')
+        callbacksRef.current.onError?.()
+      }
     },
-    [onVerify]
+    []
   )
 
   // Reuse verification once per browser tab session.
@@ -71,18 +92,33 @@ export function TurnstileWidget({
     if (cached && isTurnstileSessionFresh()) {
       setSessionReuse(true)
       setPhase('verified')
-      onVerify(cached.token)
+      callbacksRef.current.onVerify(cached.token)
     }
-  }, [onVerify])
+  }, [])
 
   useEffect(() => {
     if (!scriptReady || !SITE_KEY || !containerRef.current || !window.turnstile) {
       return
     }
 
+    if (phase === 'verified') {
+      if (widgetIdRef.current) {
+        window.turnstile.remove(widgetIdRef.current)
+        widgetIdRef.current = null
+      }
+      return
+    }
+
+    if (phase === 'error') {
+      if (widgetIdRef.current) {
+        window.turnstile.remove(widgetIdRef.current)
+        widgetIdRef.current = null
+      }
+      return
+    }
+
     if (widgetIdRef.current) {
-      window.turnstile.remove(widgetIdRef.current)
-      widgetIdRef.current = null
+      return
     }
 
     // Fresh session: show challenge. Reused session: refresh token silently in background.
@@ -97,13 +133,13 @@ export function TurnstileWidget({
         clearTurnstileSession()
         setSessionReuse(false)
         setPhase('challenge')
-        onExpire?.()
+        callbacksRef.current.onExpire?.()
       },
       'error-callback': () => {
         clearTurnstileSession()
         setSessionReuse(false)
         setPhase('error')
-        onError?.()
+        callbacksRef.current.onError?.()
       },
       theme: 'dark',
       size: 'normal',
@@ -117,7 +153,7 @@ export function TurnstileWidget({
         widgetIdRef.current = null
       }
     }
-  }, [scriptReady, handleVerify, onExpire, onError, sessionReuse])
+  }, [scriptReady, handleVerify, phase, sessionReuse])
 
   if (!SITE_KEY) {
     if (process.env.NODE_ENV === 'development') {
@@ -139,7 +175,7 @@ export function TurnstileWidget({
         onReady={() => setScriptReady(true)}
         onError={() => {
           setPhase('error')
-          onError?.()
+          callbacksRef.current.onError?.()
         }}
       />
 

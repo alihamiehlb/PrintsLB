@@ -40,7 +40,7 @@ Thank you for choosing PrintsLB! 🎉`
     quality: string
   ): number {
     // Base time in minutes
-    let baseTime = fileSize / (1024 * 1024) * 10 // 10 min per MB
+    const baseTime = fileSize / (1024 * 1024) * 10 // 10 min per MB
     
     // Material multipliers
     const materialMultipliers = {

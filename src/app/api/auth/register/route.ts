@@ -4,6 +4,12 @@ import { prisma } from '@/lib/prisma'
 import { hashPassword } from '@/lib/auth'
 import { verifyTurnstileToken, isTurnstileConfigured } from '@/lib/turnstile'
 import { getClientIp } from '@/lib/rate-limit'
+import {
+  createTurnstileClearance,
+  hasTurnstileClearance,
+  TURNSTILE_CLEARANCE_COOKIE,
+  TURNSTILE_CLEARANCE_TTL_MS,
+} from '@/lib/turnstile-clearance'
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,7 +20,9 @@ export async function POST(request: NextRequest) {
       turnstileToken?: string
     }>(request)
 
-    if (isTurnstileConfigured()) {
+    const hasClearance = await hasTurnstileClearance(request)
+
+    if (isTurnstileConfigured() && !hasClearance) {
       const captcha = await verifyTurnstileToken(
         turnstileToken,
         getClientIp(request.headers)
@@ -67,10 +75,25 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       { message: 'User created successfully', userId: user.id },
       { status: 201 }
     )
+
+    if (!hasClearance) {
+      const clearance = await createTurnstileClearance()
+      if (clearance) {
+        response.cookies.set(TURNSTILE_CLEARANCE_COOKIE, clearance, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: Math.floor(TURNSTILE_CLEARANCE_TTL_MS / 1000),
+        })
+      }
+    }
+
+    return response
   } catch (error) {
     console.error('Registration error:', error)
     return NextResponse.json(

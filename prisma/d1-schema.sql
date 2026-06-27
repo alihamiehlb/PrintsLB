@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS "users" (
   "id" TEXT NOT NULL PRIMARY KEY,
   "email" TEXT NOT NULL,
   "name" TEXT,
+  "emailVerified" INTEGER,
   "password" TEXT,
   "image" TEXT,
   "role" TEXT NOT NULL DEFAULT 'USER',

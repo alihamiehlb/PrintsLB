@@ -24,6 +24,15 @@ You also need these GitHub repo secrets for the deploy workflow:
   **Workers R2 Storage: Edit**, **Account Settings: Read**.
 - `CLOUDFLARE_ACCOUNT_ID` — found on the Cloudflare dashboard home.
 
+These runtime app secrets must be set in Cloudflare Workers with
+`wrangler secret put ...` before production login works:
+
+- `NEXTAUTH_SECRET`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `TURNSTILE_SECRET_KEY` if Turnstile is enabled
+- Any optional notification/cache secrets you use, such as Telegram or Redis
+
 ---
 
 ## 2. Provision Cloudflare resources
@@ -40,6 +49,9 @@ wrangler r2 bucket create printslb-uploads
 # Apply the schema to D1 (uses prisma migrations/SQL)
 npx prisma generate
 wrangler d1 execute printslb-db --remote --file=./prisma/d1-schema.sql
+
+# If the D1 database already existed before Google OAuth was added, run once:
+wrangler d1 execute printslb-db --remote --file=./prisma/d1-google-oauth.sql
 
 # Optional: migrate existing Neon/Postgres data into D1
 node scripts/export-neon-to-d1.mjs
@@ -58,21 +70,51 @@ wrangler secret put ADMIN_EMAIL
 wrangler secret put ADMIN_PASSWORD
 wrangler secret put REDIS_REST_URL
 wrangler secret put REDIS_REST_TOKEN
+wrangler secret put TURNSTILE_SECRET_KEY
 ```
 
 ---
 
-## 3. Deploy
+## 3. Google Login
+
+Create the client in Google Cloud Console:
+
+1. Go to **APIs & Services -> OAuth consent screen** and configure the app.
+2. Go to **APIs & Services -> Credentials -> Create Credentials -> OAuth client ID**.
+3. Choose **Application type: Web application**.
+4. Add these **Authorized JavaScript origins**:
+   - `http://localhost:3000`
+   - `https://printslb.com`
+5. Add these **Authorized redirect URIs**:
+   - `http://localhost:3000/api/auth/callback/google`
+   - `https://printslb.com/api/auth/callback/google`
+6. Copy the generated values into local `.env`:
+   - `GOOGLE_CLIENT_ID="...apps.googleusercontent.com"`
+   - `GOOGLE_CLIENT_SECRET="..."`
+7. Put the same production values into Cloudflare Worker secrets:
+
+```bash
+wrangler secret put GOOGLE_CLIENT_ID
+wrangler secret put GOOGLE_CLIENT_SECRET
+```
+
+For local development, keep `NEXTAUTH_URL="http://localhost:3000"`. For
+production, `wrangler.jsonc` already sets `NEXTAUTH_URL` to
+`https://printslb.com`.
+
+---
+
+## 4. Deploy
 
 ```bash
 npm run deploy   # opennextjs-cloudflare build && deploy
 ```
 
-CI/CD also runs this automatically — see **section 6**.
+CI/CD also runs this automatically — see **section 7**.
 
 ---
 
-## 4. Domain: printslb.com
+## 5. Domain: printslb.com
 
 1. In the Cloudflare dashboard, add the site **printslb.com** (Websites → Add a site).
 2. Update your registrar's nameservers to the two Cloudflare nameservers shown.
@@ -84,7 +126,7 @@ CI/CD also runs this automatically — see **section 6**.
 
 ---
 
-## 5. Scalability & DDoS protection (layered)
+## 6. Scalability & DDoS protection (layered)
 
 **Layer 1 — Cloudflare edge (primary, fully scalable).** Handles volumetric
 attacks before they reach the Worker.
@@ -116,7 +158,7 @@ autoscale. Keep responses cacheable where possible and rely on the edge cache.
 
 ---
 
-## 6. CI/CD
+## 7. CI/CD
 
 - **`.github/workflows/ci.yml`** runs on every push/PR:
   - `lint`, `typecheck`, `build`
@@ -124,6 +166,11 @@ autoscale. Keep responses cacheable where possible and rely on the edge cache.
   - **Gitleaks** secret scanning
   - **CodeQL** static analysis (results in the repo Security tab)
 - **`.github/workflows/deploy.yml`** deploys to Cloudflare after CI passes on
-  `main`, or via manual **workflow_dispatch**. Requires the two Cloudflare
-  secrets above and a `production` GitHub Environment (add reviewers there if you
-  want a manual approval gate before each deploy).
+  `main`, or via manual **workflow_dispatch**. It requires these GitHub
+  repository or `production` environment secrets:
+  - `CLOUDFLARE_API_TOKEN`
+  - `CLOUDFLARE_ACCOUNT_ID`
+
+The deploy workflow does not store app runtime secrets. Keep app runtime secrets
+in Cloudflare Workers via `wrangler secret put`, then CD can deploy new Worker
+versions without exposing those values to GitHub Actions logs.

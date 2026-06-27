@@ -285,7 +285,7 @@ export default function TrackOrder() {
                                   {order.notes && (
                                     <div className="mt-4 p-4 bg-gray-800/50 rounded-xl border border-gray-700">
                                       <p className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2">Customer Notes:</p>
-                                      <p className="text-gray-300 text-sm whitespace-pre-wrap italic">"{order.notes}"</p>
+                                      <p className="text-gray-300 text-sm whitespace-pre-wrap italic">&quot;{order.notes}&quot;</p>
                                     </div>
                                   )}
                                 </div>
