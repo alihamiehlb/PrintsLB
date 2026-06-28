@@ -65,26 +65,37 @@ export async function isTurnstileClearanceValid(
 }
 
 export async function hasTurnstileClearance(
-  request: NextRequest | { headers?: Record<string, string | undefined> }
+  request: any
 ): Promise<boolean> {
-  if ('cookies' in request) {
-    return isTurnstileClearanceValid(
-      request.cookies.get(TURNSTILE_CLEARANCE_COOKIE)?.value
-    )
+  let cookieValue: string | null | undefined = undefined
+
+  if (request.cookies) {
+    if (typeof request.cookies.get === 'function') {
+      cookieValue = request.cookies.get(TURNSTILE_CLEARANCE_COOKIE)?.value
+    } else {
+      cookieValue = request.cookies[TURNSTILE_CLEARANCE_COOKIE]
+    }
   }
 
-  const headers = request.headers as Record<string, string | undefined> | undefined
-  const cookieHeader = headers
-    ? (headers.cookie || headers.Cookie || headers.COOKIE)
-    : undefined
+  if (!cookieValue && request.headers) {
+    let cookieHeader: string | null | undefined = undefined
+    if (typeof request.headers.get === 'function') {
+      cookieHeader = request.headers.get('cookie')
+    } else {
+      const headers = request.headers as Record<string, string | undefined>
+      cookieHeader = headers.cookie || headers.Cookie || headers.COOKIE
+    }
 
-  const cookie = cookieHeader
-    ?.split(';')
-    .map((part) => part.trim())
-    .find((part) => part.startsWith(`${TURNSTILE_CLEARANCE_COOKIE}=`))
-    ?.split('=')
-    .slice(1)
-    .join('=')
+    if (cookieHeader) {
+      cookieValue = cookieHeader
+        ?.split(';')
+        .map((part) => part.trim())
+        .find((part) => part.startsWith(`${TURNSTILE_CLEARANCE_COOKIE}=`))
+        ?.split('=')
+        .slice(1)
+        .join('=')
+    }
+  }
 
-  return isTurnstileClearanceValid(cookie)
+  return isTurnstileClearanceValid(cookieValue)
 }
