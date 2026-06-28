@@ -30,8 +30,8 @@
     "NEXT_PUBLIC_SITE_URL": "https://printslb.com"
   },
   "routes": [
-    { "pattern": "printslb.com", "custom_domain": true },
-    { "pattern": "www.printslb.com", "custom_domain": true }
+    { "pattern": "printslb.com/*", "zone_name": "printslb.com" },
+    { "pattern": "www.printslb.com/*", "zone_name": "printslb.com" }
   ],
   "observability": {
     "enabled": true
