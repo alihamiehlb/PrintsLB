@@ -8,7 +8,8 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import {
   Package, Users, DollarSign, Settings, Plus, Edit, X, TrendingUp,
-  Clock, CheckCircle, AlertCircle, Download, Trash2, Truck, Upload, BarChart3, Image
+  Clock, CheckCircle, AlertCircle, Download, Trash2, Truck, Upload, BarChart3, Image,
+  KeyRound, Shield
 } from 'lucide-react'
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { OptimizedImage } from '@/components/ui/optimized-image'
@@ -56,6 +57,7 @@ interface User {
   email: string
   name?: string
   role: string
+  hasPassword: boolean
   createdAt: string
   _count: {
     orders: number
@@ -96,6 +98,9 @@ export default function AdminPanel() {
   const [editingMaterial, setEditingMaterial] = useState<Material | null>(null)
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [passwordModalUser, setPasswordModalUser] = useState<User | null>(null)
+  const [newPasswordInput, setNewPasswordInput] = useState('')
+  const [savingPassword, setSavingPassword] = useState(false)
 
   // Forms
   const [newMaterial, setNewMaterial] = useState({
@@ -310,6 +315,68 @@ export default function AdminPanel() {
     } catch (error) {
       console.error('Failed to update user role:', error)
       alert('Failed to update user role')
+    }
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    const targetUser = users.find(u => u.id === userId)
+    if (!targetUser) return
+
+    if (targetUser.email === session?.user?.email) {
+      alert('You cannot delete your own account.')
+      return
+    }
+
+    if (!confirm(`Are you sure you want to permanently delete ${targetUser.name || targetUser.email}? This will remove all their orders and data.`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users?userId=${userId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        setUsers(prevUsers => prevUsers.filter(u => u.id !== userId))
+      } else {
+        const data = await response.json() as { error?: string }
+        alert(data.error || 'Failed to delete user')
+      }
+    } catch (error) {
+      console.error('Failed to delete user:', error)
+      alert('Failed to delete user')
+    }
+  }
+
+  const handleChangePassword = async () => {
+    if (!passwordModalUser || !newPasswordInput) return
+
+    if (newPasswordInput.length < 6) {
+      alert('Password must be at least 6 characters.')
+      return
+    }
+
+    setSavingPassword(true)
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: passwordModalUser.id, password: newPasswordInput })
+      })
+
+      if (response.ok) {
+        setPasswordModalUser(null)
+        setNewPasswordInput('')
+        setUsers(prevUsers => prevUsers.map(u => u.id === passwordModalUser.id ? { ...u, hasPassword: true } : u))
+        alert('Password updated successfully.')
+      } else {
+        alert('Failed to update password.')
+      }
+    } catch (error) {
+      console.error('Failed to change password:', error)
+      alert('Failed to change password.')
+    } finally {
+      setSavingPassword(false)
     }
   }
 
@@ -912,7 +979,7 @@ export default function AdminPanel() {
                 </div>
               )}
 
-              {/* Users Tab - NEW */}
+              {/* Users Tab */}
               {activeTab === 'users' && (
                 <div className="rounded-2xl border border-gray-800 bg-gray-900/50 p-8 backdrop-blur-sm">
                   <h2 className="text-2xl font-bold text-white mb-6">Users Management</h2>
@@ -922,6 +989,7 @@ export default function AdminPanel() {
                         <tr className="border-b border-gray-700">
                           <th className="text-left py-3 px-4 text-gray-400">User</th>
                           <th className="text-left py-3 px-4 text-gray-400">Email</th>
+                          <th className="text-left py-3 px-4 text-gray-400">Auth</th>
                           <th className="text-left py-3 px-4 text-gray-400">Role</th>
                           <th className="text-left py-3 px-4 text-gray-400">Orders</th>
                           <th className="text-left py-3 px-4 text-gray-400">Joined</th>
@@ -929,12 +997,24 @@ export default function AdminPanel() {
                         </tr>
                       </thead>
                       <tbody>
-                        {users.map((user) => (
-                          <tr key={user.id} className="border-b border-gray-800">
+                        {users.map((user) => {
+                          const isSelf = user.email === session?.user?.email
+                          return (
+                          <tr key={user.id} className="border-b border-gray-800 hover:bg-white/[0.02] transition-colors">
                             <td className="py-3 px-4">
                               <p className="text-white font-medium">{user.name || 'No name'}</p>
                             </td>
-                            <td className="py-3 px-4 text-gray-300">{user.email}</td>
+                            <td className="py-3 px-4 text-gray-300 text-sm">{user.email}</td>
+                            <td className="py-3 px-4">
+                              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                                user.hasPassword
+                                  ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                  : 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+                              }`}>
+                                {user.hasPassword ? <KeyRound className="w-3 h-3" /> : <Shield className="w-3 h-3" />}
+                                {user.hasPassword ? 'Creds' : 'Google'}
+                              </span>
+                            </td>
                             <td className="py-3 px-4">
                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user.role === 'ADMIN'
                                 ? 'bg-white text-black'
@@ -944,24 +1024,48 @@ export default function AdminPanel() {
                               </span>
                             </td>
                             <td className="py-3 px-4 text-white">{user._count.orders}</td>
-                            <td className="py-3 px-4 text-gray-400">
+                            <td className="py-3 px-4 text-gray-400 text-sm">
                               {new Date(user.createdAt).toLocaleDateString()}
                             </td>
                             <td className="py-3 px-4">
-                              <button
-                                onClick={() => handleUpdateUserRole(user.id, user.role)}
-                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                                  user.email === session?.user?.email
-                                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
-                                    : 'bg-white text-black hover:bg-zinc-200 active:scale-95'
-                                }`}
-                                disabled={user.email === session?.user?.email}
-                              >
-                                Change to {user.role === 'ADMIN' ? 'USER' : 'ADMIN'}
-                              </button>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <button
+                                  onClick={() => handleUpdateUserRole(user.id, user.role)}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                                    isSelf
+                                      ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                                      : 'bg-white text-black hover:bg-zinc-200 active:scale-95'
+                                  }`}
+                                  disabled={isSelf}
+                                  title={isSelf ? 'Cannot change your own role' : `Change to ${user.role === 'ADMIN' ? 'USER' : 'ADMIN'}`}
+                                >
+                                  {user.role === 'ADMIN' ? '→ User' : '→ Admin'}
+                                </button>
+                                <button
+                                  onClick={() => { setPasswordModalUser(user); setNewPasswordInput('') }}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all duration-200 active:scale-95"
+                                  title="Set or change password"
+                                >
+                                  <KeyRound className="w-3 h-3 inline mr-1" />
+                                  Password
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteUser(user.id)}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                                    isSelf
+                                      ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                                      : 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 active:scale-95'
+                                  }`}
+                                  disabled={isSelf}
+                                  title={isSelf ? 'Cannot delete yourself' : 'Delete user'}
+                                >
+                                  <Trash2 className="w-3 h-3 inline mr-1" />
+                                  Delete
+                                </button>
+                              </div>
                             </td>
                           </tr>
-                        ))}
+                        )})}
                       </tbody>
                     </table>
                   </div>
@@ -974,6 +1078,64 @@ export default function AdminPanel() {
                   )}
                 </div>
               )}
+
+              {/* Change Password Modal */}
+              <AnimatePresence>
+                {passwordModalUser && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                    onClick={() => setPasswordModalUser(null)}
+                  >
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.9, opacity: 0 }}
+                      className="bg-gray-900 rounded-2xl p-6 w-full max-w-md border border-gray-800"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <h3 className="text-xl font-bold text-white mb-2">
+                        {passwordModalUser.hasPassword ? 'Change' : 'Set'} Password
+                      </h3>
+                      <p className="text-gray-400 text-sm mb-4">
+                        For <span className="text-white font-medium">{passwordModalUser.name || passwordModalUser.email}</span>
+                      </p>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-400 mb-1">New Password</label>
+                          <input
+                            type="password"
+                            value={newPasswordInput}
+                            onChange={(e) => setNewPasswordInput(e.target.value)}
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/30"
+                            placeholder="Minimum 6 characters"
+                            minLength={6}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-3 mt-6">
+                        <button
+                          onClick={() => setPasswordModalUser(null)}
+                          className="flex-1 px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleChangePassword}
+                          disabled={savingPassword || newPasswordInput.length < 6}
+                          className="flex-1 px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {savingPassword ? 'Saving...' : 'Save Password'}
+                        </button>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
 
               {/* Analytics Tab - NEW */}

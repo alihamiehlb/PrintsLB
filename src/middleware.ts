@@ -66,7 +66,6 @@ function applySecurityHeaders(res: NextResponse): NextResponse {
   res.headers.set('X-DNS-Prefetch-Control', 'off')
   res.headers.set('Content-Security-Policy', CSP)
   res.headers.set('Cross-Origin-Opener-Policy', 'same-origin')
-  res.headers.set('Cross-Origin-Resource-Policy', 'same-origin')
   res.headers.set(
     'Permissions-Policy',
     'camera=(), microphone=(), geolocation=(), browsing-topics=()'
@@ -77,7 +76,6 @@ function applySecurityHeaders(res: NextResponse): NextResponse {
   )
   // Additional security headers
   res.headers.set('X-XSS-Protection', '1; mode=block')
-  res.headers.set('Cross-Origin-Embedder-Policy', 'require-corp')
   return res
 }
 
