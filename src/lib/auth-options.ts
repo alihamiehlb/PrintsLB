@@ -29,10 +29,7 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
-          // Bypass Turnstile for the admin email to ensure they can always login
-          const isAdminBypass = credentials.email.toLowerCase().trim() === 'alihamiehlb@gmail.com'
-          
-          if (isTurnstileConfigured() && !isAdminBypass) {
+          if (isTurnstileConfigured()) {
             const captcha = await verifyTurnstileToken(credentials.turnstileToken)
             if (!captcha.ok) {
               console.log('Turnstile failed for', credentials.email)

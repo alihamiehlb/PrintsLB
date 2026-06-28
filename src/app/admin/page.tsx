@@ -283,6 +283,36 @@ export default function AdminPanel() {
     }
   }
 
+  const handleUpdateUserRole = async (userId: string, currentRole: string) => {
+    const newRole = currentRole === 'ADMIN' ? 'USER' : 'ADMIN'
+    
+    if (users.find(u => u.id === userId)?.email === session?.user?.email) {
+      alert('You cannot change your own role.')
+      return
+    }
+
+    if (!confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, role: newRole })
+      })
+
+      if (response.ok) {
+        setUsers(prevUsers => prevUsers.map(u => u.id === userId ? { ...u, role: newRole } : u))
+      } else {
+        alert('Failed to update user role')
+      }
+    } catch (error) {
+      console.error('Failed to update user role:', error)
+      alert('Failed to update user role')
+    }
+  }
+
   const handleUpdateJobPrice = async (id: string, baseCost: number, totalPrice: number) => {
     try {
       const response = await fetch('/api/admin/print-jobs', {
@@ -895,6 +925,7 @@ export default function AdminPanel() {
                           <th className="text-left py-3 px-4 text-gray-400">Role</th>
                           <th className="text-left py-3 px-4 text-gray-400">Orders</th>
                           <th className="text-left py-3 px-4 text-gray-400">Joined</th>
+                          <th className="text-left py-3 px-4 text-gray-400">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -915,6 +946,19 @@ export default function AdminPanel() {
                             <td className="py-3 px-4 text-white">{user._count.orders}</td>
                             <td className="py-3 px-4 text-gray-400">
                               {new Date(user.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="py-3 px-4">
+                              <button
+                                onClick={() => handleUpdateUserRole(user.id, user.role)}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+                                  user.email === session?.user?.email
+                                    ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
+                                    : 'bg-white text-black hover:bg-zinc-200 active:scale-95'
+                                }`}
+                                disabled={user.email === session?.user?.email}
+                              >
+                                Change to {user.role === 'ADMIN' ? 'USER' : 'ADMIN'}
+                              </button>
                             </td>
                           </tr>
                         ))}
