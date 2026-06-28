@@ -1,7 +1,6 @@
 import type { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import GoogleProvider from 'next-auth/providers/google'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import { verifyPassword } from '@/lib/auth'
 import { verifyTurnstileToken, isTurnstileConfigured } from '@/lib/turnstile'

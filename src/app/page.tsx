@@ -147,7 +147,7 @@ export default function Home() {
             </h2>
             <div className="space-y-6 text-zinc-300">
               <p className="text-lg leading-relaxed">
-                PrintsLB is Lebanon's premier 3D printing service, providing high-quality STL printing across Beirut, Mount Lebanon, and all regions of Lebanon. Whether you're in Tripoli, Sidon, Tyre, Byblos, Zahle, or Baalbek, we deliver professional 3D prints directly to your doorstep.
+                PrintsLB is Lebanon&apos;s premier 3D printing service, providing high-quality STL printing across Beirut, Mount Lebanon, and all regions of Lebanon. Whether you&apos;re in Tripoli, Sidon, Tyre, Byblos, Zahle, or Baalbek, we deliver professional 3D prints directly to your doorstep.
               </p>
               <p className="text-lg leading-relaxed">
                 Our 3D printing services in Lebanon include rapid prototyping, custom figurines, replacement parts, and artistic pieces. We use industrial-grade Creality 3D printers and premium materials including PLA, PETG, TPU, and ABS to ensure the highest quality results for every project.
