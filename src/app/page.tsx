@@ -133,6 +133,50 @@ export default function Home() {
           </motion.div>
         </section>
 
+        {/* SEO Content Section */}
+        <section className="px-6 py-24 md:px-12 bg-zinc-950/50">
+          <motion.div
+            className="mx-auto max-w-4xl"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="mb-8 text-center text-3xl font-bold text-white md:text-4xl">
+              Professional <span className="text-gradient-bw">3D Printing in Lebanon</span>
+            </h2>
+            <div className="space-y-6 text-zinc-300">
+              <p className="text-lg leading-relaxed">
+                PrintsLB is Lebanon's premier 3D printing service, providing high-quality STL printing across Beirut, Mount Lebanon, and all regions of Lebanon. Whether you're in Tripoli, Sidon, Tyre, Byblos, Zahle, or Baalbek, we deliver professional 3D prints directly to your doorstep.
+              </p>
+              <p className="text-lg leading-relaxed">
+                Our 3D printing services in Lebanon include rapid prototyping, custom figurines, replacement parts, and artistic pieces. We use industrial-grade Creality 3D printers and premium materials including PLA, PETG, TPU, and ABS to ensure the highest quality results for every project.
+              </p>
+              <p className="text-lg leading-relaxed">
+                As the leading 3D printing company in Lebanon, we offer instant online quotes, real-time order tracking, and expert support via WhatsApp. Upload your STL files today and experience the best 3D printing service Lebanon has to offer.
+              </p>
+              <div className="grid gap-4 md:grid-cols-2 mt-8">
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                  <h3 className="mb-2 text-xl font-semibold text-white">3D Printing Beirut</h3>
+                  <p className="text-zinc-400">Fast delivery across Beirut and surrounding areas with same-day pickup available.</p>
+                </div>
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                  <h3 className="mb-2 text-xl font-semibold text-white">3D Printing Mount Lebanon</h3>
+                  <p className="text-zinc-400">Serving all Mount Lebanon regions with professional quality and competitive pricing.</p>
+                </div>
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                  <h3 className="mb-2 text-xl font-semibold text-white">Nationwide Delivery</h3>
+                  <p className="text-zinc-400">Delivery to Tripoli, Sidon, Tyre, Byblos, Zahle, Baalbek, and all Lebanon regions.</p>
+                </div>
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+                  <h3 className="mb-2 text-xl font-semibold text-white">Expert Support</h3>
+                  <p className="text-zinc-400">WhatsApp support for file optimization, material selection, and technical guidance.</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </section>
+
         {/* CTA */}
         <section className="px-6 py-24 md:px-12">
           <motion.div
@@ -146,7 +190,7 @@ export default function Home() {
               Ready to Print Your <span className="text-gradient-bw">3D Model</span>?
             </h2>
             <p className="mb-8 text-lg text-zinc-400">
-              Upload your STL file now for a professional printability review and custom quote.
+              Upload your STL file now for professional 3D printing in Lebanon with instant quotes and fast delivery.
             </p>
             <CtaButton href="/upload" variant="primary">
               <Upload className="h-5 w-5" />
