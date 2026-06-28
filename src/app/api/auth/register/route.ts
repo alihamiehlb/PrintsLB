@@ -20,9 +20,7 @@ export async function POST(request: NextRequest) {
       turnstileToken?: string
     }>(request)
 
-    const hasClearance = await hasTurnstileClearance(request)
-
-    if (isTurnstileConfigured() && !hasClearance) {
+    if (isTurnstileConfigured()) {
       const captcha = await verifyTurnstileToken(
         turnstileToken,
         getClientIp(request.headers)
@@ -79,19 +77,6 @@ export async function POST(request: NextRequest) {
       { message: 'User created successfully', userId: user.id },
       { status: 201 }
     )
-
-    if (!hasClearance) {
-      const clearance = await createTurnstileClearance()
-      if (clearance) {
-        response.cookies.set(TURNSTILE_CLEARANCE_COOKIE, clearance, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: Math.floor(TURNSTILE_CLEARANCE_TTL_MS / 1000),
-        })
-      }
-    }
 
     return response
   } catch (error) {

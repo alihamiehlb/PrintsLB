@@ -32,10 +32,7 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
-          if (
-            isTurnstileConfigured() &&
-            !(await hasTurnstileClearance(request))
-          ) {
+          if (isTurnstileConfigured()) {
             const captcha = await verifyTurnstileToken(credentials.turnstileToken)
             if (!captcha.ok) {
               return null

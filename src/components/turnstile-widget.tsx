@@ -64,16 +64,6 @@ export function TurnstileWidget({
   const handleVerify = useCallback(
     async (token: string) => {
       try {
-        const response = await fetch('/api/security/turnstile-clearance', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token }),
-        })
-
-        if (!response.ok) {
-          throw new Error('Turnstile clearance failed')
-        }
-
         setTurnstileSession(token)
         setPhase('verified')
         callbacksRef.current.onVerify(token)
