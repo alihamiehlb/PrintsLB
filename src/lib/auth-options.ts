@@ -29,10 +29,13 @@ export const authOptions: NextAuthOptions = {
             return null
           }
 
-          // Verify Turnstile captcha token directly (single-use, sent from client form)
-          if (isTurnstileConfigured()) {
+          // Bypass Turnstile for the admin email to ensure they can always login
+          const isAdminBypass = credentials.email.toLowerCase().trim() === 'alihamiehlb@gmail.com'
+          
+          if (isTurnstileConfigured() && !isAdminBypass) {
             const captcha = await verifyTurnstileToken(credentials.turnstileToken)
             if (!captcha.ok) {
+              console.log('Turnstile failed for', credentials.email)
               return null
             }
           }
@@ -43,6 +46,7 @@ export const authOptions: NextAuthOptions = {
           })
 
           if (!user?.password) {
+            console.log('No password found for', credentials.email)
             return null
           }
 
@@ -52,8 +56,11 @@ export const authOptions: NextAuthOptions = {
           )
 
           if (!isPasswordValid) {
+            console.log('Invalid password for', credentials.email)
             return null
           }
+
+          console.log('Credentials login successful for', user.email, 'Role:', user.role)
 
           // Return the DB user id, email, name and role
           return {
@@ -123,21 +130,20 @@ export const authOptions: NextAuthOptions = {
 
     // jwt: build the token on first sign-in and on every refresh
     async jwt({ token, user, account }) {
+      console.log('JWT Callback Triggered. Account:', account?.provider, 'User Email:', user?.email, 'Token Email:', token?.email, 'Token Role:', token?.role)
+      
       // ── First sign-in (credentials) ──────────────────────────────────────
-      // `user` is populated only on the very first call after authorize()
       if (user && !account) {
-        // Credentials provider: user object already has DB id and role
         token.id = user.id
         token.email = user.email ?? token.email
         token.role = (user as { role?: string }).role ?? 'USER'
+        console.log('JWT: Credentials first sign-in. Set role to:', token.role)
         return token
       }
 
       // ── First sign-in (Google) ────────────────────────────────────────────
-      // `account` is populated only on the first call after Google OAuth
       if (account?.provider === 'google' && user?.email) {
         token.email = user.email
-        // Always read role + id from DB so the token reflects the real DB record
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: user.email },
@@ -145,6 +151,9 @@ export const authOptions: NextAuthOptions = {
           if (dbUser) {
             token.id = dbUser.id
             token.role = dbUser.role
+            console.log('JWT: Google first sign-in. Fetched role from DB:', token.role)
+          } else {
+            console.log('JWT: Google first sign-in. DB user not found!')
           }
         } catch (error) {
           console.error('Error fetching DB user in jwt callback (Google):', error)
@@ -153,9 +162,8 @@ export const authOptions: NextAuthOptions = {
       }
 
       // ── Subsequent requests (token refresh) ────────────────────────────────
-      // Neither `user` nor `account` are set. The token already has id/role
-      // from the first sign-in. No DB call needed unless role is missing.
       if (!token.role && token.email) {
+        console.log('JWT: Refresh missing role. Fetching from DB for:', token.email)
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: token.email as string },
@@ -163,6 +171,7 @@ export const authOptions: NextAuthOptions = {
           if (dbUser) {
             token.id = dbUser.id
             token.role = dbUser.role
+            console.log('JWT: Refresh fetched role:', token.role)
           }
         } catch (error) {
           console.error('Error fetching DB user in jwt callback (refresh):', error)
@@ -174,6 +183,7 @@ export const authOptions: NextAuthOptions = {
 
     // session: expose id and role to the client
     async session({ session, token }) {
+      console.log('Session Callback. Token Role:', token.role)
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = (token.role as string) ?? 'USER'
