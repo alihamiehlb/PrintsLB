@@ -73,7 +73,11 @@ export async function hasTurnstileClearance(
     )
   }
 
-  const cookieHeader = request.headers?.cookie
+  const headers = request.headers as Record<string, string | undefined> | undefined
+  const cookieHeader = headers
+    ? (headers.cookie || headers.Cookie || headers.COOKIE)
+    : undefined
+
   const cookie = cookieHeader
     ?.split(';')
     .map((part) => part.trim())

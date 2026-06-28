@@ -146,9 +146,9 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email
       }
 
-      // For Google provider, ensure we have the latest user data from DB
-      // Only fetch if we don't have role/id already (to avoid unnecessary DB calls)
-      if (account?.provider === 'google' && token.email && (!token.role || !token.id)) {
+      // For Google provider, we must always get the user from the DB to get their correct role and DB user ID.
+      // (The initial `user` object from Google has the Google ID, not the database ID).
+      if (account?.provider === 'google' && token.email) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: token.email as string },
