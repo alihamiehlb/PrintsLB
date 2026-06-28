@@ -89,6 +89,7 @@ export const authOptions: NextAuthOptions = {
 
           if (!dbUser) {
             // Create new user if doesn't exist
+            console.log('Creating new user for Google sign-in:', user.email)
             dbUser = await prisma.user.create({
               data: {
                 email: user.email,
@@ -96,6 +97,8 @@ export const authOptions: NextAuthOptions = {
                 role: 'USER',
               },
             })
+          } else {
+            console.log('Found existing user for Google sign-in:', user.email, 'with role:', dbUser.role)
           }
 
           // Create account record for Google if it doesn't exist
@@ -107,6 +110,7 @@ export const authOptions: NextAuthOptions = {
           })
 
           if (!existingAccount) {
+            console.log('Creating Google account record for user:', dbUser.id)
             await prisma.account.create({
               data: {
                 userId: dbUser.id,
@@ -126,6 +130,7 @@ export const authOptions: NextAuthOptions = {
           // Update user object with database role
           user.role = dbUser.role
           user.id = dbUser.id
+          console.log('Set user role from DB:', user.role, 'user ID:', user.id)
         } catch (error) {
           console.error('Error in Google signIn callback:', error)
           // Don't block sign-in on database errors
@@ -139,10 +144,12 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = (user as { role?: string }).role ?? 'USER'
         token.id = user.id
+        token.email = user.email
       }
 
       // For Google provider, ensure we have the latest user data from DB
-      if (account?.provider === 'google' && token.email) {
+      // Only fetch if we don't have role/id already (to avoid unnecessary DB calls)
+      if (account?.provider === 'google' && token.email && (!token.role || !token.id)) {
         try {
           const dbUser = await prisma.user.findUnique({
             where: { email: token.email as string },
