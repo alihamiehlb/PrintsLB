@@ -29,7 +29,7 @@ export async function PUT(
       data: {
         name: data.name,
         description: data.description,
-        color: data.color,
+        color: data.color || null,
         pricePerGram: Number(data.pricePerGram),
         available: data.available,
         printerType: data.printerType

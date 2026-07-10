@@ -30,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en-LB">
+    <html lang="en-LB" className="overflow-y-scroll">
       <head>
         <link rel="author" type="text/plain" href="/llms.txt" title="LLMs.txt" />
       </head>

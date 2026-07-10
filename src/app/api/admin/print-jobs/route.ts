@@ -5,6 +5,8 @@ import { authOptions } from '@/lib/auth-options'
 import { parseJsonBody } from '@/lib/json'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)

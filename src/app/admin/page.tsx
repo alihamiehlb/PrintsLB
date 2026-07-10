@@ -141,7 +141,7 @@ export default function AdminPanel() {
 
   const fetchPricingSettings = async () => {
     try {
-      const response = await fetch('/api/admin/settings')
+      const response = await fetch(`/api/admin/settings?t=${Date.now()}`)
       if (response.ok) {
         const data = await response.json() as { taxRate: number; serviceFee: number; scaleMultiplier: number }
         setPricingSettings(data)
@@ -172,7 +172,7 @@ export default function AdminPanel() {
 
   const fetchStats = async () => {
     try {
-      const response = await fetch('/api/admin/stats')
+      const response = await fetch(`/api/admin/stats?t=${Date.now()}`)
       if (response.ok) {
         const data = await response.json() as typeof stats
         setStats(data)
@@ -184,7 +184,7 @@ export default function AdminPanel() {
 
   const fetchMaterials = async () => {
     try {
-      const response = await fetch('/api/admin/materials')
+      const response = await fetch(`/api/admin/materials?t=${Date.now()}`)
       if (response.ok) {
         const data = await response.json() as Material[]
         setMaterials(data)
@@ -196,7 +196,7 @@ export default function AdminPanel() {
 
   const fetchPrintJobs = async () => {
     try {
-      const response = await fetch('/api/admin/print-jobs')
+      const response = await fetch(`/api/admin/print-jobs?t=${Date.now()}`)
       if (response.ok) {
         const data = await response.json() as PrintJob[]
         setPrintJobs(data)
@@ -208,7 +208,7 @@ export default function AdminPanel() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch('/api/admin/products')
+      const response = await fetch(`/api/admin/products?t=${Date.now()}`)
       if (response.ok) {
         const data = await response.json() as Product[]
         setProducts(data)
@@ -220,7 +220,7 @@ export default function AdminPanel() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch('/api/admin/users')
+      const response = await fetch(`/api/admin/users?t=${Date.now()}`)
       if (response.ok) {
         const data = await response.json() as User[]
         setUsers(data)
@@ -249,9 +249,13 @@ export default function AdminPanel() {
           available: true,
           printerType: 'FDM'
         })
+      } else {
+        const errorData = await response.json() as { error?: string }
+        alert(errorData.error || 'Failed to add material')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add material:', error)
+      alert('Failed to add material: ' + error.message)
     }
   }
 
@@ -617,7 +621,7 @@ export default function AdminPanel() {
                 </div>
               </div>
 
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="popLayout">
                 <motion.div
                   key={activeTab}
                   initial={{ opacity: 0, y: 12 }}

@@ -3,6 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth-options'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const session = await getServerSession(authOptions)
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
       data: {
         name: data.name,
         description: data.description,
-        color: data.color,
+        color: data.color || null,
         pricePerGram: Number(data.pricePerGram),
         available: data.available,
         printerType: data.printerType || 'FDM'
@@ -62,8 +64,8 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json(material)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error creating material:', error)
-    return NextResponse.json({ error: 'Failed to create material' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to create material: ' + error.message }, { status: 500 })
   }
 }

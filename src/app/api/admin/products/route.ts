@@ -4,6 +4,8 @@ import { authOptions } from '@/lib/auth-options'
 import { parseJsonBody } from '@/lib/json'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 // GET all products
 export async function GET(request: NextRequest) {
     try {
