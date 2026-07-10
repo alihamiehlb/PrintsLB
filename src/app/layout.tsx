@@ -17,7 +17,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   ...rootMetadata,
   alternates: {
-    canonical: SITE_URL,
     types: {
       'text/plain': [{ url: '/llms.txt', title: 'LLMs.txt' }],
     },
