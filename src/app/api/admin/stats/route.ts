@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     // Material Popularity
     const materialStats = await prisma.printJob.groupBy({
       by: ['materialId'],
-      _count: { id: true },
+      _count: { _all: true },
       where: { order: { NOT: { status: 'CANCELLED' } } }
     })
 
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
     const materialDistribution = materialStats.map(stat => ({
       name: materials.find(m => m.id === stat.materialId)?.name || 'Unknown',
-      value: stat._count.id
+      value: stat._count._all
     }))
 
     // 30-day Revenue History

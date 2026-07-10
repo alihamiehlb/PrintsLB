@@ -613,7 +613,7 @@ export default function AdminPanel() {
             </aside>
 
             {/* Content */}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 relative">
               <div className="flex items-end justify-between mb-8">
                 <div>
                   <h2 className="text-3xl font-bold text-white">{activeTabMeta?.label}</h2>
